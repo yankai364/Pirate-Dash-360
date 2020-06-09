@@ -1,0 +1,11 @@
+# Created by Kenney (www.kenney.nl)
+
+newmtl wood
+Kd 0.7098039 0.4078431 0.2705882
+
+newmtl roof
+Kd 0.3889284 0.5104572 0.8679245
+
+newmtl dirt
+Kd 0.8862745 0.5137255 0.3411765
+

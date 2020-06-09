@@ -1,0 +1,17 @@
+# Created by Kenney (www.kenney.nl)
+
+newmtl dirt
+Kd 0.8862745 0.5137255 0.3411765
+
+newmtl grass
+Kd 0.2065237 0.8584906 0.6385639
+
+newmtl wood
+Kd 0.7098039 0.4078431 0.2705882
+
+newmtl stone
+Kd 0.6775098 0.7981371 0.8207547
+
+newmtl foliage
+Kd 0.1353685 0.735849 0.6171867
+

@@ -1,0 +1,14 @@
+# Created by Kenney (www.kenney.nl)
+
+newmtl dirt
+Kd 0.8862745 0.5137255 0.3411765
+
+newmtl grass
+Kd 0.2065237 0.8584906 0.6385639
+
+newmtl dark
+Kd 0.3113208 0.3113208 0.3113208
+
+newmtl wool
+Kd 0.9339623 0.9078192 0.9031239
+

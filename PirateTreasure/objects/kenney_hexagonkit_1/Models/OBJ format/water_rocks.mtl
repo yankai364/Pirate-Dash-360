@@ -1,0 +1,8 @@
+# Created by Kenney (www.kenney.nl)
+
+newmtl water
+Kd 0.5242524 0.9339623 0.8850569
+
+newmtl stone
+Kd 0.6775098 0.7981371 0.8207547
+
