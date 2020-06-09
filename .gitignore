@@ -1,0 +1,37 @@
+# Exclude package-lock.json
+package-lock.json
+
+# OS generated files 
+.DS_Store
+.DS_Store?
+._*
+*.fuse_*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Misc
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+logs
+*.log
+
+# IDE
+.idea
+*.eslintcache
+.vscode/*
+.vscode
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.vscode/
+.vs/
+x64/
