@@ -217,6 +217,10 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
+function degreesToRadians(degrees) {
+    let pi = Math.PI;
+    return degrees * (pi / 180);
+}
 
 
 
@@ -273,27 +277,16 @@ function animateTileSwap(tile1, tile2) {
 
 function animateRotateAgent(agent, direction) {
     const tdRotateAgent = getTimeDriver()
-    let degree = 0
-
-    switch (direction) {
-        case "up":
-            degree = 180
-            break
-        case "down":
-            degree = 0
-            break
-        case "right":
-            degree = 90
-            break
-        case "left":
-            degree = -90
-            break
-        default:
+    let angles = {
+        "up": degreesToRadians(180),
+        "down": degreesToRadians(0),
+        "right": degreesToRadians(90),
+        "left": degreesToRadians(270)
     }
 
     agent.transform.rotationY = Animation.animate(
         tdRotateAgent,
-        Animation.samplers.linear(agent.transform.rotationY.pinLastValue(), degree)
+        Animation.samplers.linear(angles[player_direction], angles[direction])
     )
     tdRotateAgent.start()
 }
