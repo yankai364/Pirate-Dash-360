@@ -30,6 +30,7 @@ let tile_patterns = level.tile_patterns;
 let start_tile = level.start_tile;
 let end_tile = level.end_tile;
 let position_tiles = {}
+let tiles_position = {}
 let position_visited = {}
 
 // Gameflow variables
@@ -78,12 +79,12 @@ Scene.root.findFirst("level" + current_level)
     
                 // For each tile, prepare listener for tap event
                 TouchGestures.onTap(tile_UI).subscribe(function () {
-                    if (!ready) {
+                    if (!ready) {       
                         if (!tile_is_animating) {
                             if (selection === null) {
                                 // if there is no active tile
                                 selection = tile_UI
-                                selection_position = position
+                                selection_position = tiles_position[tile_pattern.name]
                                 animateTileSelect(tile_UI, "active")
                             } else {
                                 // if active tile is same as selection, de-select tile
@@ -94,8 +95,7 @@ Scene.root.findFirst("level" + current_level)
                                 }
                                 // swap tiles
                                 else {
-                                    swapTiles(selection_position, position)
-                                    animateTileSwap(selection, tile_UI)
+                                    swapTiles(selection_position, tiles_position[tile_pattern.name], selection, tile_UI)
                                     animateTileSelect(selection, "blur")
                                     selection = null
                                     selection_position = null
@@ -127,8 +127,9 @@ async function getTileUI(name) {
 
 async function placeTile(tile_pattern, position) {
     
-    // Place tile in position_tiles
+    // Place tile in position_tiles and tiles_position
     position_tiles[position] = tile_pattern
+    tiles_position[tile_pattern.name] = position
 
     if (Object.keys(position_tiles).length === (tile_patterns.length + 2)) {
         // All tiles placed
@@ -141,13 +142,17 @@ async function placeTile(tile_pattern, position) {
     tile_UI.transform.z = getCoordinateZFromIndex(position[1]);
 }
 
-async function swapTiles(position_1, position_2) {
+async function swapTiles(position_1, position_2, selection, tile_UI) {
     let tile_pattern_1 = position_tiles[position_1]
     let tile_pattern_2 = position_tiles[position_2]
     
     // Swap tiles
     position_tiles[position_1] = tile_pattern_2
+    tiles_position[tile_pattern_2.name] = position_1
     position_tiles[position_2] = tile_pattern_1
+    tiles_position[tile_pattern_1.name] = position_2
+
+    animateTileSwap(selection, tile_UI)
 }
 
 function moveAgent(agent, agentPosition) {
