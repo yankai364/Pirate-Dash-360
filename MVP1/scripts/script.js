@@ -63,7 +63,7 @@ Scene.root.findFirst("pirate")
             Diagnostics.log("Starting game");
             ready = true;
             Time.setInterval(() => {
-                if (!player_lost && (agentPosition[0] !== end_tile.position[0] && agentPosition[1] !== end_tile.position[1])) {
+                if (!player_lost && (agentPosition[0] !== end_tile.position[0] || agentPosition[1] !== end_tile.position[1])) {
                     agentPosition = moveAgent(agent, agentPosition);
                 }
             }, 1000);
@@ -186,8 +186,10 @@ function moveAgent(agent, agentPosition) {
         Diagnostics.log("Invalid move");
         player_lost = true;
 
-        // Position to move toward is invalid - change to crash animation clip
-        Patches.inputs.setScalar('pirate_animation', 2);
+        Time.setTimeout(() => {
+            // Position to move toward is invalid - change to crash animation clip
+            Patches.inputs.setScalar('pirate_animation', 2);
+        }, 500)
 
         return agentPosition;
     } else if (position_visited[destinationPosition]) {
@@ -195,7 +197,9 @@ function moveAgent(agent, agentPosition) {
         player_lost = true;
         
         // Dead - Change to crash animation clip
-        Patches.inputs.setScalar('pirate_animation', 2);
+        Time.setTimeout(() => {
+            Patches.inputs.setScalar('pirate_animation', 2);
+        }, 500)
 
         return agentPosition;
     }
@@ -326,8 +330,10 @@ function animateMoveAgent(agent, destinationPosition, direction) {
     agent.transform.x = shiftx(tdAgentMove, agent, point[0]);
     agent.transform.z = shiftz(tdAgentMove, agent, point[1]);
     tdAgentMove.start();
-    // Time.setTimeout(() => {
-    //     // Set back to idle after each step
-    //     Patches.inputs.setScalar('pirate_animation', 0)
-    // }, 500)
+    Time.setTimeout(() => {
+        // Set back to idle after each step
+        if (!player_lost) {
+            Patches.inputs.setScalar('pirate_animation', 0)
+        }
+    }, 500)
 }
