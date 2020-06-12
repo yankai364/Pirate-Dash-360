@@ -39,4 +39,21 @@ We learnt so much regarding Spark AR Studio and how scripting can be used to enh
 Next, we plan to add in more tile types, such as distractors, and allow for different difficulty levels in the different grids.
 
 ---
+## Acknowledgements/Resources/References:
+SketchFab
+Kenney
+Javascript
+Spark-AR
+
+### Links
+https://www.kenney.nl/assets/platformer-kit
+https://sketchfab.com/3d-models/3d-sidescroller-little-pirate-7329a3297b374a8ca0bbb032eb49a3aa
+https://sketchfab.com/3d-models/treasure-chest-b46fd9edd44e412fa76f9b9a2b86281c
+https://sketchfab.com/3d-models/chevron-f4a277b8d9cd47e0bea272eb58c1c5b0
+
+---
+## Try it out
+https://www.instagram.com/ar/3521555794541192/?ch=YTI2MDBkODQ5YzY2NjZlNDQ3OWM0MDNkODg3ZTQ3NjM%3D
+
+---
 *Updated as at 12 June 2020*
