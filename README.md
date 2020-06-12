@@ -1,5 +1,5 @@
-# Facebook Spark AR Hackathon: Saucy Pirates, a Pirate-themed AR Puzzle Game
-*by Team CharizARds*
+# Saucy Pirates, a Pirate-themed AR Puzzle Game
+*by Team CharizARds for Facebook Spark AR Hackathon*
 
 ## Getting Started
 [insert instructions on how to run the project]
@@ -35,7 +35,7 @@ We were very satisfied with the end result, as we were total AR novices at the v
 We learnt so much regarding Spark AR Studio and how scripting can be used to enhance the AR experience. From coming up with ideas and designing the gameplay, we have learnt that that there are endless possibilities that AR can be used to enhance an experience. Although we were only doing it for a mobile device, it 
 
 ---
-## What's next for Angry Bird Puzzle
+## What's next for Saucy Pirates
 Next, we plan to add in more tile types, such as distractors, and allow for different difficulty levels in the different grids.
 
 ---
