@@ -55,12 +55,20 @@ Scene.root.findFirst("pirate")
         agent.transform.y = top_left_y + 0.11; // To check height
         agent.transform.z = point[1];
 
-        // TODO: Set agent animation clip to idle1 or idle2
+        // Set agent animation clip to idle
+        Patches.inputs.setScalar('pirate_animation', 0)
+
+        // Listen for tap on character
+        TouchGestures.onTap(agent).subscribe(function (gesture) {
+            Diagnostics.log("Starting game");
+            ready = true;
             Time.setInterval(() => {
-                if (ready) {
+                if (!player_lost && (agentPosition[0] !== end_tile.position[0] && agentPosition[1] !== end_tile.position[1])) {
                     agentPosition = moveAgent(agent, agentPosition);
                 }
             }, 1000);
+        });
+
         Diagnostics.log("Agent loaded");
     })
 
@@ -175,20 +183,23 @@ function moveAgent(agent, agentPosition) {
     animateMoveAgent(agent, destinationPosition, direction)
 
     if (destinationPosition == null || position_tiles[destinationPosition] == null) {
-        player_lost = true
+        Diagnostics.log("Invalid move");
+        player_lost = true;
 
-        // TODO: Position to move toward is invalid - change to crash animation clip
+        // Position to move toward is invalid - change to crash animation clip
+        Patches.inputs.setScalar('pirate_animation', 2);
+
         return agentPosition;
     } else if (position_visited[destinationPosition]) {
-        player_lost = true
+        Diagnostics.log("Moved backwards");
+        player_lost = true;
         
-        // TODO: Dead - Change to crash animation clip
+        // Dead - Change to crash animation clip
+        Patches.inputs.setScalar('pirate_animation', 2);
+
         return agentPosition;
     }
     // Diagnostics.watch("Destination Position", destinationPosition.toString());
-
-    // Valid move
-    
 
     // Check for win state
     if (destinationPosition[0] === end_tile.position[0] && destinationPosition[1] === end_tile.position[1]) {
@@ -306,8 +317,8 @@ function animateMoveAgent(agent, destinationPosition, direction) {
         player_direction = direction
     }
 
-    // TODO: Change animation clip to walking if animation clip is idle1 or idle2
-    Diagnostics.log(destinationPosition)
+    // Diagnostics.log(destinationPosition);
+
     // Animate agent towards direction
     const tdAgentMove = getTimeDriver(500);
     const point = getMidPointFromIndex(destinationPosition);
@@ -315,8 +326,8 @@ function animateMoveAgent(agent, destinationPosition, direction) {
     agent.transform.x = shiftx(tdAgentMove, agent, point[0]);
     agent.transform.z = shiftz(tdAgentMove, agent, point[1]);
     tdAgentMove.start();
-    Time.setTimeout(() => {
-        // Set back to idle after each step
-        Patches.inputs.setScalar('pirate_animation', 0)
-    }, 500)
+    // Time.setTimeout(() => {
+    //     // Set back to idle after each step
+    //     Patches.inputs.setScalar('pirate_animation', 0)
+    // }, 500)
 }
