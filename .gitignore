@@ -21,6 +21,7 @@ Desktop.ini
 .env
 logs
 *.log
+tsconfig.json
 
 # IDE
 .idea
