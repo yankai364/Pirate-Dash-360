@@ -15,15 +15,15 @@ const topLeftz = -0.52;
 
 /**
 Grid
-          |-------|
+(x, y, z) |-------|
           |_      |
-(x, y, z) |l|_____|
+          |l|_____|
 **/
 
 // Level variables
 const levels = require("./levels");
-let current_level = 1;
-let level = levels[current_level - 1]; // lv 1 is index 0
+let currentLevel = 1;
+let level = levels[currentLevel - 1]; // lv 1 is index 0
 let no_of_tiles = level.no_of_tiles;
 let tile_positions = level.tile_positions;
 let tile_patterns = level.tile_patterns;
@@ -56,7 +56,8 @@ Scene.root.findFirst("character")
         agent.transform.z = point[1];
 
         Time.setInterval(() => {
-            if (CameraInfo.isRecordingVideo.pinLastValue()) {
+            ready = true;
+            if (ready) {
                 agentPosition = animateAgent(agent, agentPosition);
             }
         }, 1000);
@@ -65,8 +66,11 @@ Scene.root.findFirst("character")
     })
 
 // Place each tile in a random position
-for (let i = 1; i <= no_of_tiles; i++) {
-    Scene.root.findFirst("tile" + i)
+Scene.root.findFirst("level" + currentLevel)
+.then(level => {
+    // Loop through tiles
+    for (let i = 1; i <= no_of_tiles; i++) {
+        level.findFirst("tile" + i)
         .then(tile => {
             let randIndex = getRandomInt(tile_positions.length)
             let position = tile_positions[randIndex]
@@ -98,7 +102,8 @@ for (let i = 1; i <= no_of_tiles; i++) {
             });
 
         });
-}
+    }
+});
 
 // TODO: Track position of player and the tile direction
 
@@ -189,34 +194,38 @@ function animateTileSwap(tile1, tile2) {
 
 function animateAgent(agent, agentPosition) {
     let direction = position_direction[agentPosition];
-    Diagnostics.watch("Current Position", agentPosition.toString());
-    Diagnostics.watch("Direction", direction);
-    let destination_position = null;
+    
+    // Diagnostics.watch("Current Position", agentPosition.toString());
+    // Diagnostics.watch("Direction", direction);
+    
+    let destinationPosition = null;
 
     if (direction == "left") {
-        destination_position = [agentPosition[0] - 1, agentPosition[1]];
+        destinationPosition = [agentPosition[0] - 1, agentPosition[1]];
     } else if (direction == "right") {
-        destination_position = [agentPosition[0] + 1, agentPosition[1]];
+        destinationPosition = [agentPosition[0] + 1, agentPosition[1]];
     } else if (direction == "up") {
-        destination_position = [agentPosition[0], agentPosition[1] - 1];
+        destinationPosition = [agentPosition[0], agentPosition[1] - 1];
     } else if (direction == "down") {
-        destination_position = [agentPosition[0], agentPosition[1] + 1];
+        destinationPosition = [agentPosition[0], agentPosition[1] + 1];
     }
 
-    Diagnostics.watch("Destination Position", destination_position.toString());
-
-    if (destination_position === null || position_direction[destination_position] === undefined) {
+    if (destinationPosition == null || position_direction[destinationPosition] == null) {
         // Position to move toward is invalid
-        ready = false;
-        return;
-    }
+        Diagnostics.log("Invalid move");
+        return agentPosition;
+    } //else (isVisited(destinationPosition)) {
+        // Dead
+    //}
+
+    // Diagnostics.watch("Destination Position", destinationPosition.toString());
 
     const tdAgentMove = getTimeDriver(500);
-    const point = getMidPointFromIndex(destination_position);
+    const point = getMidPointFromIndex(destinationPosition);
 
     agent.transform.x = shiftx(tdAgentMove, agent, point[0]);
     agent.transform.z = shiftz(tdAgentMove, agent, point[1]);
     tdAgentMove.start();
 
-    return destination_position;
+    return destinationPosition;
 }
