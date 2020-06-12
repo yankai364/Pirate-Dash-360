@@ -2,7 +2,7 @@
 *by Team CharizARds for Facebook Spark AR Hackathon*
 
 ## Getting Started
-Try out our game here (You will need to log onto your Instagram account):
+Try out our game here (You will need to log onto your Instagram account):  
 https://www.instagram.com/ar/3521555794541192/?ch=YTI2MDBkODQ5YzY2NjZlNDQ3OWM0MDNkODg3ZTQ3NjM%3D
 
 ---
@@ -17,8 +17,8 @@ Players are supposed to move the pirate from the start to the end, where the tre
 ## How we built it
 The game was built entirely using the Spark AR Studio. The main scripting done was JavaScript, and this set of code executes a set of commands based on the user’s swaps, and also allows them to toggle between different levels. Various game objects were sourced from different sites that provided game assets for free.
 
-We have created a few levels for our players, and they come in a 3 x 3 and a 4 x 4 grid. Players are required to swap the tiles within the time limit in order to complete the game successfully. Currently, these are the levels and puzzle types available to the players.  
-![Level1](img/Level1.png)
+We have created a few levels for our players, and they come in a 3 x 3 and a 4 x 4 grid. Players are required to swap the tiles to complete the game successfully. Currently, these are the levels and puzzle types available:  
+<p align="center"><img src="img/Level1.PNG" width="150"/></p>
 
 ---
 ## Challenges we ran into
