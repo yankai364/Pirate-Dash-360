@@ -1,6 +1,8 @@
 # Saucy Pirates, a Pirate-themed AR Puzzle Game
 *by Team CharizARds for Facebook Spark AR Hackathon*
 
+<p align="center"><img src="img/SaucyPirates_thumbnail.png" width="600"/></p>
+
 ## Getting Started
 Try out our game here (You will need to log onto your Instagram account):  
 https://www.instagram.com/ar/3521555794541192/?ch=YTI2MDBkODQ5YzY2NjZlNDQ3OWM0MDNkODg3ZTQ3NjM%3D
