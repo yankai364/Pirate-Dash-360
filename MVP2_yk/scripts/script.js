@@ -12,8 +12,8 @@ export const Diagnostics = require('Diagnostics');
 
 // Native UI Picker
 Promise.all([
-    Textures.findFirst("green"),
-    Textures.findFirst("green"),
+    Textures.findFirst("world1_icon"),
+    Textures.findFirst("world2_icon"),
     Scene.root.findFirst("level1"),
     Scene.root.findFirst("level2")
 ]).then(results => {
