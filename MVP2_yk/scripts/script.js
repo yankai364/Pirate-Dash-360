@@ -6,7 +6,50 @@ const Animation = require("Animation");
 const Time = require("Time");
 const Patches = require('Patches');
 const Materials = require('Materials');
+const Textures = require('Textures');
+const NativeUI = require('NativeUI');
 export const Diagnostics = require('Diagnostics');
+
+// Native UI Picker
+Promise.all([
+    Textures.findFirst("green"),
+    Textures.findFirst("green"),
+    Scene.root.findFirst("level1"),
+    Scene.root.findFirst("level2")
+]).then(results => {
+    const button1 = results[0];
+    const button2 = results[1];
+    
+    const worlds = [
+        results[2], 
+        results[3]
+    ];
+
+    const configuration = {
+        selectedIndex: 0,
+        items: [
+            { image_texture: button1 },
+            { image_texture: button2 }
+        ]
+    };
+
+    function toggleVisibility(selected_world_index) {
+        worlds.forEach((world, idx) => {
+            Diagnostics.log(idx + "" + selected_world_index);
+            world.hidden = (idx !== selected_world_index);
+        });
+    }
+
+    // By default, first world is selected
+    toggleVisibility(0);
+
+    const picker = NativeUI.picker; 
+    picker.configure(configuration);
+    picker.visible = true;
+    Diagnostics.log("Picker loaded");
+
+    picker.selectedIndex.monitor().subscribe(index => toggleVisibility(index.newValue));
+});
 
 // Tile dimensions
 const UNIT_LENGTH = 0.15; // x length and z length
