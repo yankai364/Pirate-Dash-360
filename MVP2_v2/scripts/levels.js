@@ -1,7 +1,7 @@
 let worlds = {}
 
 worlds["world1"] = {
-	level1: generateLevel([9,6],[13,4],
+	level1: generateLevel([9,6,'right'],[13,4],
     [
         [10,6,'right',true,1],
         [11,6,'right',true,1],
@@ -13,7 +13,7 @@ worlds["world1"] = {
         [11,4,'right',true,1],
         [12,4,'right',true,1],
     ]),
-    level2: generateLevel([15,5],[17,9],
+    level2: generateLevel([15,5,'down'],[17,9],
     [
     	[15,6,'down',true, 1],
         [15,7,'right',true,1],
@@ -25,7 +25,7 @@ worlds["world1"] = {
         [17,7,"down",true, 1],
         [17,8,"down",true, 1],
     ]),
-    level3: generateLevel([15,11],[18,16],
+    level3: generateLevel([15,11,'down'],[18,16],
     [
     	[15,12,'right',true,1],
         [15,13,'up',true,1],
@@ -44,7 +44,7 @@ worlds["world1"] = {
         [18,14,'left',true,1],
         [18,15,'down',true,1],
     ]),
-    level4: generateLevel([13,15],[7,19],
+    level4: generateLevel([13,15,'left'],[7,19],
     [
     	[12,15,'left',true,1],
         [11,15,'down',true,1],
@@ -72,7 +72,7 @@ worlds["world1"] = {
         [9,19,'left',true,1],
         [8,19,'left',true,1],
     ]),
-    level5: generateLevel([6,14],[2,8],
+    level5: generateLevel([6,14,'up'],[2,8],
     [
     	[6,13,'up',true,1],
         [6,12,'up',true,1],
@@ -231,23 +231,24 @@ function generateLevel(startPos, endPos, positions){
         	obstacleTilePositions.push({
             	name: "tile" + (i+1),
                	type: position[2],
-           		position: positions.slice(0,2)
+           		position: position.slice(0,2)
             })
         }
     }
     
-    const tilePositions = positions.map(position => {
+    const tilePositions = positions.filter(position => position[3]).map(position => {
     	return position.slice(0,2)
     })
+
     return {
     	numTiles: totalTiles,
         tilePositions: tilePositions,
         obstacleTilePositions: obstacleTilePositions,
         startTile: {
         	name: "tileStart",
-            direction: "right",
+            direction: startPos[2],
             units: 1,
-            position: startPos
+            position: startPos.slice(0,2)
         },
         endTile: {
         	name: "tileEnd",

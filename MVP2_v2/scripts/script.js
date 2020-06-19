@@ -10,9 +10,9 @@ export const Diagnostics = require('Diagnostics');
 
 // Tile dimensions
 const UNIT_LENGTH = 0.15; // x length and z length
-const TOP_LEFT_X = -0.463;
+const TOP_LEFT_X = -1.513;
 const TOP_LEFT_Y = -0.8;
-const TOP_LEFT_Z = -0.52;
+const TOP_LEFT_Z = -0.22;
 
 /**
 Grid
@@ -21,13 +21,14 @@ Grid
           |l|_____|
 **/
 
-// Level variables
+// World variables
 const LEVELS = require("./levels");
+let currentWorld = 1;
 let currentLevel = 1;
-let level = LEVELS[currentLevel - 1]; // lv 1 is index 0
-let numTiles = level.numTiles;
+let level = LEVELS[`world${currentWorld}`][`level${currentLevel}`]; // lv 1 is index 0
 let tilePositions = level.tilePositions;
 let tilePatterns = level.tilePatterns;
+let obstacles = level.obstacleTilePositions;
 let startTile = level.startTile;
 let endTile = level.endTile;
 let positionTilesMapping = {}
@@ -36,99 +37,127 @@ let positionVisited = {}
 
 // Gameflow variables
 let ready = false;
-let playerDirection = "down"
+let agentDirection = "down"
 let playerWin = false;
 let playerLost = false;
 let selection = null; // store any selected tile (for swapping)
 let selectionPosition = null
 let tileIsAnimating = false
+let pirateSubscription = null
+let tileSubscriptions = []
+let moveAgentIntervalID = null
 
-// Place start and end tile
-placeTile(startTile, startTile.position);
-placeTile(endTile, endTile.position); // Includes chest
+// Hide all levels before initialization
+for (let i = 2; i <= 5; i++) {
+    Scene.root.findFirst(`level${i}`)
+        .then(level => level.hidden = true)
+}
 
-// Close treasure chest
-Patches.inputs.setScalar('chest_animation', 0);
+initLevel()
 
-// Place character on start tile
-Scene.root.findFirst("pirate")
-    .then(agent => {
-        let agentPosition = startTile.position
-        let point = getMidPointFromIndex(agentPosition);
-        agent.transform.x = point[0];
-        agent.transform.y = TOP_LEFT_Y + 0.11; // To check height
-        agent.transform.z = point[1];
+function initLevel() {
 
-        // Set agent animation clip to idle
-        Patches.inputs.setScalar('pirate_animation', 0)
+    // Update variables
+    level = LEVELS[`world${currentWorld}`][`level${currentLevel}`];
+    tilePositions = level.tilePositions;
+    tilePatterns = level.tilePatterns;
+    obstacles = level.obstacleTilePositions;
+    startTile = level.startTile;
+    endTile = level.endTile;
+    agentDirection = startTile.direction
+    ready = false;
 
-        // Listen for tap on character
-        TouchGestures.onTap(agent).subscribe(function (gesture) {
-            if (!ready) {
-                Diagnostics.log("Starting game");
-                ready = true;
-                Time.setInterval(() => {
-                    if (!playerLost && (agentPosition[0] !== endTile.position[0] || agentPosition[1] !== endTile.position[1])) {
-                        agentPosition = moveAgent(agent, agentPosition);
-                    }
-                }, 1000);
-            }
-        });
+    // Place start and end tile
+    placeTile(startTile, startTile.position);
+    placeTile(endTile, endTile.position); // Includes chest
 
-        Diagnostics.log("Agent loaded");
-    })
+    // Close treasure chest
+    Patches.inputs.setScalar('chest_animation', 0);
 
-// Place each tile in a random position
-Scene.root.findFirst("level" + currentLevel)
-    .then(level => {
-        // Loop through tiles
-        tilePatterns.forEach(tilePattern => {
-            level.findFirst(tilePattern.name)
-            .then(tileUi => {
-                let randIndex = getRandomInt(tilePositions.length)
-                let position = tilePositions[randIndex]
-                tilePositions.splice(randIndex, 1)
-    
-                placeTile(tilePattern, position)
-    
-                // For each tile, prepare listener for tap event
-                TouchGestures.onTap(tileUi).subscribe(function () {
-                    if (!ready) {       
-                        if (!tileIsAnimating) {
-                            if (selection === null) {
-                                // if there is no active tile
-                                selection = tileUi
-                                selectionPosition = tilesPositionMapping[tilePattern.name]
-                                animateTileSelect(tileUi, "active")
-                            } else {
-                                // if active tile is same as selection, de-select tile
-                                if (tileUi === selection) {
-                                    animateTileSelect(tileUi, "blur")
-                                    selection = null
-                                    selectionPosition = null
-                                }
-                                // swap tiles
-                                else {
-                                    swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
-                                    animateTileSelect(selection, "blur")
-                                    selection = null
-                                    selectionPosition = null
+    // Place character on start tile
+    Scene.root.findFirst("pirate")
+        .then(agent => {
+            let agentPosition = startTile.position
+            let point = getMidPointFromIndex(agentPosition);
+            agent.transform.x = point[0];
+            agent.transform.y = TOP_LEFT_Y + 0.11; // To check height
+            agent.transform.z = point[1];
+
+            // Update agent direction at start tile
+            animateRotateAgent(agent, agentDirection)
+
+            // Set agent animation clip to idle
+            Patches.inputs.setScalar('pirate_animation', 0);
+            
+            // Listen for tap on character
+            pirateSubscription = TouchGestures.onTap(agent).subscribe(function (gesture) {
+                if (!ready) {
+                    Diagnostics.log("Starting game");
+                    ready = true;
+                    moveAgentIntervalID = Time.setInterval(() => {
+                        if (!playerLost && (agentPosition[0] !== endTile.position[0] || agentPosition[1] !== endTile.position[1])) {
+                            agentPosition = moveAgent(agent, agentPosition);
+                        }
+                    }, 1000);
+                }
+            });
+
+            Diagnostics.log("Agent loaded");
+        })
+
+
+    // Place directional and obstacle tiles
+    Scene.root.findFirst(`level${currentLevel}`)
+        .then(level => {
+            // Show level
+            level.hidden = false
+
+            // Loop through directional tiles and place them at a random position
+            tilePatterns.forEach(tilePattern => {
+                level.findFirst(tilePattern.name)
+                .then(tileUi => {
+                    let randIndex = getRandomInt(tilePositions.length)
+                    let position = tilePositions[randIndex]
+                    tilePositions.splice(randIndex, 1)
+                    
+                    placeTile(tilePattern, position)
+
+                    // For each tile, prepare listener for tap event
+                    let tileSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
+                        if (!ready) {       
+                            if (!tileIsAnimating) {
+                                if (selection === null) {
+                                    // if there is no active tile
+                                    selection = tileUi
+                                    selectionPosition = tilesPositionMapping[tilePattern.name]
+                                    animateTileSelect(tileUi, "active")
+                                } else {
+                                    // if active tile is same as selection, de-select tile
+                                    if (tileUi === selection) {
+                                        animateTileSelect(tileUi, "blur")
+                                        selection = null
+                                        selectionPosition = null
+                                    }
+                                    // swap tiles
+                                    else {
+                                        swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
+                                        animateTileSelect(selection, "blur")
+                                        selection = null
+                                        selectionPosition = null
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                    
+                    tileSubscriptions.push(tileSubscription)
+                })
             })
-        })
-    })
 
-// Prepare ready button
-Scene.root.findFirst("ready")
-    .then(readyBtn => {
-        TouchGestures.onTap(readyBtn).subscribe(function () {
-            ready = true
+            // Place obstacle tiles at fixed positions
+            obstacles && obstacles.forEach(obstacle => placeTile(obstacle, obstacle.position))
         })
-    })
+}
 
 
 
@@ -147,11 +176,18 @@ function placeTile(tilePattern, position) {
     }
 
     // Place tile in UI (no animation)
-    Scene.root.findFirst("level" + currentLevel)
+    Scene.root.findFirst(`level${currentLevel}`)
         .then(level => level.findFirst(tilePattern.name)
             .then(tileUi => {
                 tileUi.transform.x = getCoordinateXFromIndex(position[0]);
+                tileUi.transform.y = 2;
                 tileUi.transform.z = getCoordinateZFromIndex(position[1]);
+
+                // If current level is 1 or tile is tileStart, don't animate tile drop
+                if (currentLevel === 1 || tileUi.name === 'tileStart') 
+                    tileUi.transform.y = TOP_LEFT_Y
+                else 
+                    Time.setTimeout(() => animatePlaceTile(tileUi), 500)
             }
         ))
 }
@@ -174,7 +210,7 @@ function moveAgent(agent, agentPosition) {
     
     // Handle visited tile
     positionVisited[agentPosition] = true;
-    Scene.root.findFirst("level" + currentLevel)
+    Scene.root.findFirst(`level${currentLevel}`)
         .then(level => level.findFirst(positionTilesMapping[agentPosition].name)
             .then(visitedTile => visitedTile.findFirst("Box001__0")
                 .then(mesh => animateTileVisited(mesh))))
@@ -214,7 +250,6 @@ function moveAgent(agent, agentPosition) {
 
         return agentPosition;
     }
-    // Diagnostics.watch("Destination Position", destinationPosition.toString());
 
     // Check for win state
     if (destinationPosition[0] === endTile.position[0] && destinationPosition[1] === endTile.position[1]) {
@@ -222,7 +257,30 @@ function moveAgent(agent, agentPosition) {
 
         // Animate chest open and player win animation
         animateChestOpen()
-        Time.setTimeout(() => animateRotateAgent(agent, "down", true), 700)
+        Time.setTimeout(() => {
+            animateRotateAgent(agent, "down", true)
+
+            Time.setTimeout(() => {
+                if (currentLevel === 5) { 
+                    Diagnostics.log("World completed!")
+                    // TODO: Game end animation
+    
+                } else {
+                    // Advance to next level
+                    currentLevel += 1
+
+                    // Unsubscribe event listeners
+                    Time.clearInterval(moveAgentIntervalID)
+                    pirateSubscription.unsubscribe()
+                    tileSubscriptions.map(subscription => subscription.unsubscribe())
+                    
+                    // TODO: Level transition
+                    
+
+                    initLevel()
+                }
+            }, 2000)
+        }, 700)
     }
 
     return destinationPosition;
@@ -263,6 +321,15 @@ function getTimeDriver(duration = 200, loopCount = 1, mirror = false) {
         loopCount: loopCount,
         mirror: mirror
     });
+}
+
+function animatePlaceTile(tile) {
+    const tdPlaceTile = getTimeDriver(getRandomInt(200) + 100)
+    
+    tile.transform.y = Animation.animate(
+        tdPlaceTile, 
+        Animation.samplers.easeOutBounce(tile.transform.y.pinLastValue(), TOP_LEFT_Y))
+    tdPlaceTile.start()
 }
 
 function animateTileSelect(tile, animation) {
@@ -319,7 +386,7 @@ function animateRotateAgent(agent, direction, win = false) {
 
     agent.transform.rotationY = Animation.animate(
         tdRotateAgent,
-        Animation.samplers.linear(angles[playerDirection], win ? degreesToRadians(-360) : angles[direction])
+        Animation.samplers.linear(angles[agentDirection], win ? degreesToRadians(-360) : angles[direction])
     )
     tdRotateAgent.start()
 }
@@ -334,9 +401,9 @@ function animateMoveAgent(agent, destinationPosition, direction) {
     Patches.inputs.setScalar('pirate_animation', 1)
 
     // Rotate agent to face direction
-    if (direction !== playerDirection) {
+    if (direction !== agentDirection) {
         animateRotateAgent(agent, direction)
-        playerDirection = direction
+        agentDirection = direction
     }
 
     // Diagnostics.log(destinationPosition);
@@ -364,7 +431,7 @@ function animateTileVisited(tile) {
 }
 
 function animateChestOpen() {
-    Scene.root.findFirst("level" + currentLevel)
+    Scene.root.findFirst(`level${currentLevel}`)
         .then(level => level.findFirst("tileEnd")
             .then(tileUi => tileUi.findFirst("treasure")
                 .then(treasure => {
