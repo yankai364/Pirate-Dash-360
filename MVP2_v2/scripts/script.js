@@ -6,7 +6,10 @@ const Animation = require("Animation");
 const Time = require("Time");
 const Patches = require('Patches');
 const Materials = require('Materials');
+const Textures = require('Textures');
+const NativeUI = require('NativeUI');
 export const Diagnostics = require('Diagnostics');
+
 
 // Tile dimensions
 const UNIT_LENGTH = 0.15; // x length and z length
@@ -25,15 +28,17 @@ Grid
 const LEVELS = require("./levels");
 let currentWorld = 1;
 let currentLevel = 1;
+let positionTilesMapping = {}
+let tilesPositionMapping = {}
+let positionVisited = {}
+
+// Level variables
 let level = LEVELS[`world${currentWorld}`][`level${currentLevel}`]; // lv 1 is index 0
 let tilePositions = level.tilePositions;
 let tilePatterns = level.tilePatterns;
 let obstacles = level.obstacleTilePositions;
 let startTile = level.startTile;
 let endTile = level.endTile;
-let positionTilesMapping = {}
-let tilesPositionMapping = {}
-let positionVisited = {}
 
 // Gameflow variables
 let ready = false;
@@ -47,13 +52,81 @@ let pirateSubscription = null
 let tileSubscriptions = []
 let moveAgentIntervalID = null
 
-// Hide all levels before initialization
-for (let i = 2; i <= 5; i++) {
-    Scene.root.findFirst(`level${i}`)
-        .then(level => level.hidden = true)
-}
 
-initLevel()
+// Native UI Picker
+Promise.all([
+    Textures.findFirst("world1_icon"),
+    Textures.findFirst("world2_icon"),
+]).then(results => {
+    const button1 = results[0];
+    const button2 = results[1];
+    
+    const configuration = {
+        selectedIndex: 0,
+        items: [
+            { image_texture: button1 },
+            { image_texture: button2 }
+        ]
+    };
+
+    function toggleVisibility(selectedWorldIndex) {
+        currentWorld = selectedWorldIndex + 1
+        initWorld()
+    }
+
+    // By default, first world is selected
+    toggleVisibility(0);
+    const picker = NativeUI.picker;
+    picker.configure(configuration);
+    picker.visible = true;
+    Diagnostics.log("Picker loaded");
+
+    picker.selectedIndex.monitor().subscribe(index => toggleVisibility(index.newValue));
+});
+
+
+function initWorld() {
+
+    // Reset world variables
+    positionTilesMapping = {}
+    tilesPositionMapping = {}
+    positionVisited = {}
+
+    // Unsubscribe event listeners
+    moveAgentIntervalID && Time.clearInterval(moveAgentIntervalID)
+    pirateSubscription && pirateSubscription.unsubscribe()
+    tileSubscriptions && tileSubscriptions.map(subscription => subscription.unsubscribe())
+
+    // Hide worlds and levels
+    for (let i = 1; i <= Object.keys(LEVELS).length; i++) {
+        Scene.root.findFirst(`world${i}`)
+            .then(world => {
+                // Hide world if not current world
+                if (i !== currentWorld) {
+                    world.hidden = true
+                } else {
+                    world.hidden = false
+
+                    // Hide all levels in current world except level 1
+                    for (let j = 1; j <= Object.keys(LEVELS[`world${i}`]).length; j++) {
+                        world.findFirst(`level${j}`)
+                            .then(level => {
+                                if (j === 1) {
+                                    // Update level variable and show level
+                                    currentLevel = 1
+                                    level.hidden = false
+
+                                    // Initialize level 1
+                                    initLevel()
+                                } else {
+                                    level.hidden = true
+                                } 
+                            })
+                    }
+                }
+            })
+    }
+}
 
 function initLevel() {
 
@@ -107,55 +180,58 @@ function initLevel() {
 
 
     // Place directional and obstacle tiles
-    Scene.root.findFirst(`level${currentLevel}`)
-        .then(level => {
-            // Show level
-            level.hidden = false
-
-            // Loop through directional tiles and place them at a random position
-            tilePatterns.forEach(tilePattern => {
-                level.findFirst(tilePattern.name)
-                .then(tileUi => {
-                    let randIndex = getRandomInt(tilePositions.length)
-                    let position = tilePositions[randIndex]
-                    tilePositions.splice(randIndex, 1)
-                    
-                    placeTile(tilePattern, position)
-
-                    // For each tile, prepare listener for tap event
-                    let tileSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
-                        if (!ready) {       
-                            if (!tileIsAnimating) {
-                                if (selection === null) {
-                                    // if there is no active tile
-                                    selection = tileUi
-                                    selectionPosition = tilesPositionMapping[tilePattern.name]
-                                    animateTileSelect(tileUi, "active")
-                                } else {
-                                    // if active tile is same as selection, de-select tile
-                                    if (tileUi === selection) {
-                                        animateTileSelect(tileUi, "blur")
-                                        selection = null
-                                        selectionPosition = null
-                                    }
-                                    // swap tiles
-                                    else {
-                                        swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
-                                        animateTileSelect(selection, "blur")
-                                        selection = null
-                                        selectionPosition = null
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findFirst(`level${currentLevel}`)
+                .then(level => {
+                    // Show level
+                    level.hidden = false
+        
+                    // Loop through directional tiles and place them at a random position
+                    tilePatterns.forEach(tilePattern => {
+                        level.findFirst(tilePattern.name)
+                        .then(tileUi => {
+                            let randIndex = getRandomInt(tilePositions.length)
+                            let position = tilePositions[randIndex]
+                            tilePositions.splice(randIndex, 1)
+                            
+                            placeTile(tilePattern, position)
+        
+                            // For each tile, prepare listener for tap event
+                            let tileSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
+                                if (!ready) {       
+                                    if (!tileIsAnimating) {
+                                        if (selection === null) {
+                                            // if there is no active tile
+                                            selection = tileUi
+                                            selectionPosition = tilesPositionMapping[tilePattern.name]
+                                            animateTileSelect(tileUi, "active")
+                                        } else {
+                                            // if active tile is same as selection, de-select tile
+                                            if (tileUi === selection) {
+                                                animateTileSelect(tileUi, "blur")
+                                                selection = null
+                                                selectionPosition = null
+                                            }
+                                            // swap tiles
+                                            else {
+                                                swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
+                                                animateTileSelect(selection, "blur")
+                                                selection = null
+                                                selectionPosition = null
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        }
-                    });
-                    
-                    tileSubscriptions.push(tileSubscription)
+                            });
+                            
+                            tileSubscriptions.push(tileSubscription)
+                        })
+                    })
+        
+                    // Place obstacle tiles at fixed positions
+                    obstacles && obstacles.forEach(obstacle => placeTile(obstacle, obstacle.position))
                 })
-            })
-
-            // Place obstacle tiles at fixed positions
-            obstacles && obstacles.forEach(obstacle => placeTile(obstacle, obstacle.position))
         })
 }
 
@@ -170,26 +246,29 @@ function placeTile(tilePattern, position) {
     positionTilesMapping[position] = tilePattern
     tilesPositionMapping[tilePattern.name] = position
 
-    if (Object.keys(positionTilesMapping).length === (tilePatterns.length + 2)) {
+    if (Object.keys(positionTilesMapping).length === (tilePatterns.length + obstacles.length + 2)) {
         // All tiles placed
         Diagnostics.log("All tiles loaded");
     }
 
     // Place tile in UI (no animation)
-    Scene.root.findFirst(`level${currentLevel}`)
-        .then(level => level.findFirst(tilePattern.name)
-            .then(tileUi => {
-                tileUi.transform.x = getCoordinateXFromIndex(position[0]);
-                tileUi.transform.y = 2;
-                tileUi.transform.z = getCoordinateZFromIndex(position[1]);
-
-                // If current level is 1 or tile is tileStart, don't animate tile drop
-                if (currentLevel === 1 || tileUi.name === 'tileStart') 
-                    tileUi.transform.y = TOP_LEFT_Y
-                else 
-                    Time.setTimeout(() => animatePlaceTile(tileUi), 500)
-            }
-        ))
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findFirst(`level${currentLevel}`)
+                .then(level => level.findFirst(tilePattern.name)
+                    .then(tileUi => {
+                        tileUi.transform.x = getCoordinateXFromIndex(position[0]);
+                        tileUi.transform.y = 2;
+                        tileUi.transform.z = getCoordinateZFromIndex(position[1]);
+        
+                        // If current level is 1 or tile is tileStart, don't animate tile drop
+                        if (currentLevel === 1 || tileUi.name === 'tileStart') 
+                            tileUi.transform.y = TOP_LEFT_Y
+                        else 
+                            Time.setTimeout(() => animatePlaceTile(tileUi), 500)
+                    }
+                ))
+        })
 }
 
 function swapTiles(position1, position2, selection, tileUi) {
@@ -210,11 +289,13 @@ function moveAgent(agent, agentPosition) {
     
     // Handle visited tile
     positionVisited[agentPosition] = true;
-    Scene.root.findFirst(`level${currentLevel}`)
-        .then(level => level.findFirst(positionTilesMapping[agentPosition].name)
-            .then(visitedTile => visitedTile.findFirst("Box001__0")
-                .then(mesh => animateTileVisited(mesh))))
-                
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findFirst(`level${currentLevel}`)
+                .then(level => level.findFirst(positionTilesMapping[agentPosition].name)
+                    .then(visitedTile => visitedTile.findFirst("Box001__0")
+                        .then(mesh => animateTileVisited(mesh))))
+        })      
     
     let destinationPosition = null;
     if (direction == "left") {
@@ -249,6 +330,14 @@ function moveAgent(agent, agentPosition) {
         }, 500)
 
         return agentPosition;
+    } else if (positionTilesMapping[destinationPosition].type) {
+        Diagnostics.log("Hit obstacle")
+        playerLost = true;
+
+        Time.setTimeout(() => {
+            // Position to move toward is invalid - change to crash animation clip
+            Patches.inputs.setScalar('pirate_animation', 2);
+        }, 500)
     }
 
     // Check for win state
@@ -431,15 +520,18 @@ function animateTileVisited(tile) {
 }
 
 function animateChestOpen() {
-    Scene.root.findFirst(`level${currentLevel}`)
-        .then(level => level.findFirst("tileEnd")
-            .then(tileUi => tileUi.findFirst("treasure")
-                .then(treasure => {
-                    const tdChestOpen = getTimeDriver(300)
-                    treasure.transform.y = shifty(tdChestOpen, treasure, treasure.transform.y.pinLastValue() + 1.5)
-                    tdChestOpen.start()
-                    // Open treasure chest
-                    Patches.inputs.setScalar('chest_animation', 1);
-                })
-        ))
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findFirst(`level${currentLevel}`)
+                .then(level => level.findFirst("tileEnd")
+                    .then(tileUi => tileUi.findFirst("treasure")
+                        .then(treasure => {
+                            const tdChestOpen = getTimeDriver(300)
+                            treasure.transform.y = shifty(tdChestOpen, treasure, treasure.transform.y.pinLastValue() + 1.5)
+                            tdChestOpen.start()
+                            // Open treasure chest
+                            Patches.inputs.setScalar('chest_animation', 1);
+                        })
+                ))
+        })
 }

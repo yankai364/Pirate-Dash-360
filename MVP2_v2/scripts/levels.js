@@ -103,7 +103,7 @@ worlds["world1"] = {
 }
 
 worlds["world2"] = {
-	level1: generateLevel([9,6],[13,4],
+	level1: generateLevel([9,6,'right'],[13,4],
     [
         [10,6,'up',true,2],
         [11,6,'spike',false,0],
@@ -115,7 +115,7 @@ worlds["world2"] = {
         [11,4,'down',true,1],
         [12,4,'right',true,1],
     ]),
-    level2: generateLevel([15,5],[17,9],
+    level2: generateLevel([15,5,'down'],[17,9],
     [
     	[15,6,'right',true, 1],
         [15,7,'spike',false,0],
@@ -135,7 +135,7 @@ worlds["world2"] = {
         [18,9,'down',true, 1],
         
     ]),
-    level3: generateLevel([15,11],[18,16],
+    level3: generateLevel([15,11,'down'],[18,16],
     [
     	[15,12,'down',true,2],
         [15,13,'spike',false,0],
@@ -154,7 +154,7 @@ worlds["world2"] = {
         [18,14,'bomb',false,0],
         [18,15,'down',true,1],
     ]),
-    level4: generateLevel([13,15],[7,19],
+    level4: generateLevel([13,15,'left'],[7,19],
     [
     	[12,15,'left',true,2],
         [11,15,'spike',false,0],
@@ -184,16 +184,16 @@ worlds["world2"] = {
         
         
     ]),
-    level5: generateLevel([6,14],[2,8],
+    level5: generateLevel([6,14,'up'],[2,8],
     [
-    	[6,13,'right',true,2],
+    	[6,13,'left',true,2],
         [6,12,'up',true,1],
         [6,11,'up',true,1],
         [6,10,'up',true,1],
         [6,9,'left',true,2],
         [5,13,'spike',false,0],
         [5,12,'spike',false,0],
-        [5,11,'right',true,0],
+        [5,11,'right',true,1],
         [5,10,'spike',false,0],
         [5,9,'bomb',false,0],
         [4,13,'up',true,1],
