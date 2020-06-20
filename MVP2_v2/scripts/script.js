@@ -401,6 +401,13 @@ function moveAgent(agent, agentPosition) {
         CELEBRATE_AUDIO.reset()
         timeouts['rotateAgent'] = Time.setTimeout(() => {
             animateRotateAgent(agent, "down", true)
+            timeouts['victoryRotate'] = Time.setTimeout(() => {
+                animateVictoryRotate(agent)
+                timeouts['victoryJump'] = Time.setTimeout(() => {
+                    animateVictoryJump(agent)
+                }, 400)
+            }, 200)
+
 
             timeouts['nextLevel'] = Time.setTimeout(() => {
                 if (currentLevel === 5) { 
@@ -421,7 +428,7 @@ function moveAgent(agent, agentPosition) {
 
                     initLevel()
                 }
-            }, 2000)
+            }, 5000)
         }, 700)
     }
 
@@ -533,9 +540,17 @@ function animateRotateAgent(agent, direction, win = false) {
         "left": calculateMinAngle(agent.transform.rotationY.pinLastValue(), 270, -90),
     }
 
+    let facePlayerRotation = {
+        1: calculateMinAngle(agent.transform.rotationY.pinLastValue(), 0, 360),
+        2: calculateMinAngle(agent.transform.rotationY.pinLastValue(), 270, -90),
+        3: calculateMinAngle(agent.transform.rotationY.pinLastValue(), 270, -90),
+        4: calculateMinAngle(agent.transform.rotationY.pinLastValue(), 180, -180),
+        5: calculateMinAngle(agent.transform.rotationY.pinLastValue(), 90, -270),
+    }
+
     agent.transform.rotationY = Animation.animate(
         tdRotateAgent,
-        Animation.samplers.linear(agent.transform.rotationY.pinLastValue(), win ? degreesToRadians(-360) : angles[direction])
+        Animation.samplers.linear(agent.transform.rotationY.pinLastValue(), win ? facePlayerRotation[currentLevel] : angles[direction])
     )
     tdRotateAgent.start()
 }
@@ -595,6 +610,28 @@ function animateMoveAgent(agent, destinationPosition, direction, units) {
     }, 500)
 }
 
+function animateVictoryJump(agent) {
+    Patches.inputs.setScalar('pirate_animation', 3)
+
+    const tdAgentJump = getTimeDriver(500, 6, true);
+
+    agent.transform.y = Animation.animate(
+        tdAgentJump, 
+        Animation.samplers.linear(agent.transform.y.pinLastValue() - 0.02, agent.transform.y.pinLastValue() + 0.05)
+    )
+    tdAgentJump.start()
+}
+
+function animateVictoryRotate(agent) {
+    const tdAgentRotate = getTimeDriver(300, 2, true);
+
+    agent.transform.rotationY = Animation.animate(
+        tdAgentRotate, 
+        Animation.samplers.linear(agent.transform.rotationY.pinLastValue(), agent.transform.rotationY.pinLastValue() + degreesToRadians(360))
+    )
+    tdAgentRotate.start()
+}
+
 function animateTileVisited(tile) {
     Materials.findFirst('chevron_gray')
         .then(mat => {
@@ -631,7 +668,7 @@ function animateChestOpen() {
                     .then(tileUi => tileUi.findFirst("treasure")
                         .then(treasure => {
                             const tdChestOpen = getTimeDriver(300)
-                            treasure.transform.y = shifty(tdChestOpen, treasure, treasure.transform.y.pinLastValue() + 1.5)
+                            treasure.transform.y = shifty(tdChestOpen, treasure, treasure.transform.y.pinLastValue() + 1.8)
                             tdChestOpen.start()
                             // Open treasure chest
                             Patches.inputs.setScalar(`chest_${currentLevel}_animation`, 1);

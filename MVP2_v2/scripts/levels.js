@@ -120,7 +120,7 @@ worlds["world2"] = {
     	[15,6,'right',true, 1],
         [15,7,'spike',false,0],
         [15,8,'spike',false,0],
-        [15,9,'down',false,1],
+        [15,9,'down',true,1],
         [16,6,'down',true, 2],
         [16,7,'spike',false, 0],
         [16,8,'right',true, 1],
