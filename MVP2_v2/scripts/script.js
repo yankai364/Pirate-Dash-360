@@ -8,8 +8,16 @@ const Patches = require('Patches');
 const Materials = require('Materials');
 const Textures = require('Textures');
 const NativeUI = require('NativeUI');
+const Audio = require('Audio');
 export const Diagnostics = require('Diagnostics');
 
+// Audio
+const PIRATE_JUMP_AUDIO = Audio.getPlaybackController("pirate_jump_audio")
+const PIRATE_WALK_AUDIO = Audio.getPlaybackController("pirate_walk_audio")
+const CELEBRATE_AUDIO = Audio.getPlaybackController("celebrate_audio")
+const FALL_AUDIO = Audio.getPlaybackController("fall_audio")
+const SPIKE_AUDIO = Audio.getPlaybackController("spike_audio")
+const BOMB_AUDIO = Audio.getPlaybackController("bomb_audio")
 
 // Tile dimensions
 const UNIT_LENGTH = 0.15; // x length and z length
@@ -48,8 +56,11 @@ let playerLost = false;
 let selection = null; // store any selected tile (for swapping)
 let selectionPosition = null
 let tileIsAnimating = false
+
+// Event subscriptions, timeouts and intervals
 let pirateSubscription = null
 let tileSubscriptions = []
+let timeouts = {}
 let moveAgentIntervalID = null
 
 
@@ -91,38 +102,53 @@ function initWorld() {
     positionTilesMapping = {}
     tilesPositionMapping = {}
     positionVisited = {}
+    playerWin = false;
+    playerLost = false;
+    selection = null;
+    selectionPosition = null
+    unanimateAllVisitedTiles()
+    unanimateAllChests()
 
-    // Unsubscribe event listeners
+    // Kill intervals and timeouts, stop audio and unsubscribe event listeners to prevent glitches/bugs
     moveAgentIntervalID && Time.clearInterval(moveAgentIntervalID)
+    Object.values(timeouts).forEach(timeoutID => Time.clearTimeout(timeoutID))
     pirateSubscription && pirateSubscription.unsubscribe()
     tileSubscriptions && tileSubscriptions.map(subscription => subscription.unsubscribe())
+    PIRATE_JUMP_AUDIO.setPlaying(false)
+    PIRATE_WALK_AUDIO.setPlaying(false)
+    CELEBRATE_AUDIO.setPlaying(false)
+    FALL_AUDIO.setPlaying(false)
+    SPIKE_AUDIO.setPlaying(false)
+    BOMB_AUDIO.setPlaying(false)
 
     // Hide worlds and levels
     for (let i = 1; i <= Object.keys(LEVELS).length; i++) {
         Scene.root.findFirst(`world${i}`)
             .then(world => {
+
                 // Hide world if not current world
                 if (i !== currentWorld) {
                     world.hidden = true
                 } else {
                     world.hidden = false
+                }
 
-                    // Hide all levels in current world except level 1
-                    for (let j = 1; j <= Object.keys(LEVELS[`world${i}`]).length; j++) {
-                        world.findFirst(`level${j}`)
-                            .then(level => {
-                                if (j === 1) {
-                                    // Update level variable and show level
-                                    currentLevel = 1
-                                    level.hidden = false
+                // Hide levels
+                for (let j = 1; j <= Object.keys(LEVELS[`world${i}`]).length; j++) {
+                    world.findFirst(`level${j}`)
+                        .then(level => {
+                            if (i === currentWorld && j === 1) {
+                                // Update level variable and show level
+                                currentLevel = 1
+                                level.hidden = false
 
-                                    // Initialize level 1
-                                    initLevel()
-                                } else {
-                                    level.hidden = true
-                                } 
-                            })
-                    }
+                                // Initialize level 1
+                                initLevel()
+                            } else {
+                                // Hide all levels except level 1 of current world
+                                level.hidden = true
+                            }
+                        })
                 }
             })
     }
@@ -145,7 +171,7 @@ function initLevel() {
     placeTile(endTile, endTile.position); // Includes chest
 
     // Close treasure chest
-    Patches.inputs.setScalar('chest_animation', 0);
+    Patches.inputs.setScalar(`chest_${currentLevel}_animation`, 0);
 
     // Place character on start tile
     Scene.root.findFirst("pirate")
@@ -167,6 +193,11 @@ function initLevel() {
                 if (!ready) {
                     Diagnostics.log("Starting game");
                     ready = true;
+
+                    // Unselect any selected tiles
+                    selection ? animateTileSelect(selection, "blur") : ''
+
+                    // Move agent
                     moveAgentIntervalID = Time.setInterval(() => {
                         if (!playerLost && (agentPosition[0] !== endTile.position[0] || agentPosition[1] !== endTile.position[1])) {
                             agentPosition = moveAgent(agent, agentPosition);
@@ -186,14 +217,15 @@ function initLevel() {
                 .then(level => {
                     // Show level
                     level.hidden = false
+                    let tilePositionsCopy = tilePositions.slice()
         
                     // Loop through directional tiles and place them at a random position
                     tilePatterns.forEach(tilePattern => {
                         level.findFirst(tilePattern.name)
                         .then(tileUi => {
-                            let randIndex = getRandomInt(tilePositions.length)
-                            let position = tilePositions[randIndex]
-                            tilePositions.splice(randIndex, 1)
+                            let randIndex = getRandomInt(tilePositionsCopy.length)
+                            let position = tilePositionsCopy[randIndex]
+                            tilePositionsCopy.splice(randIndex, 1)
                             
                             placeTile(tilePattern, position)
         
@@ -265,7 +297,7 @@ function placeTile(tilePattern, position) {
                         if (currentLevel === 1 || tileUi.name === 'tileStart') 
                             tileUi.transform.y = TOP_LEFT_Y
                         else 
-                            Time.setTimeout(() => animatePlaceTile(tileUi), 500)
+                            timeouts['placeTile'] = Time.setTimeout(() => animatePlaceTile(tileUi), 500)
                     }
                 ))
         })
@@ -286,6 +318,7 @@ function swapTiles(position1, position2, selection, tileUi) {
 
 function moveAgent(agent, agentPosition) {
     let direction = positionTilesMapping[agentPosition].direction;
+    let units = positionTilesMapping[agentPosition].units;
     
     // Handle visited tile
     positionVisited[agentPosition] = true;
@@ -293,30 +326,34 @@ function moveAgent(agent, agentPosition) {
         .then(world => {
             world.findFirst(`level${currentLevel}`)
                 .then(level => level.findFirst(positionTilesMapping[agentPosition].name)
-                    .then(visitedTile => visitedTile.findFirst("Box001__0")
-                        .then(mesh => animateTileVisited(mesh))))
+                    .then(visitedTile => visitedTile.findAll("Box001__0")
+                        .then(meshes => meshes.forEach(mesh => animateTileVisited(mesh)))
+                    )
+                )
         })      
     
     let destinationPosition = null;
     if (direction == "left") {
-        destinationPosition = [agentPosition[0] - 1, agentPosition[1]];
+        destinationPosition = [agentPosition[0] - units, agentPosition[1]];
     } else if (direction == "right") {
-        destinationPosition = [agentPosition[0] + 1, agentPosition[1]];
+        destinationPosition = [agentPosition[0] + units, agentPosition[1]];
     } else if (direction == "up") {
-        destinationPosition = [agentPosition[0], agentPosition[1] - 1];
+        destinationPosition = [agentPosition[0], agentPosition[1] - units];
     } else if (direction == "down") {
-        destinationPosition = [agentPosition[0], agentPosition[1] + 1];
+        destinationPosition = [agentPosition[0], agentPosition[1] + units];
     }
 
-    animateMoveAgent(agent, destinationPosition, direction)
+    animateMoveAgent(agent, destinationPosition, direction, units)
 
     if (destinationPosition == null || positionTilesMapping[destinationPosition] == null) {
         Diagnostics.log("Invalid move");
         playerLost = true;
 
-        Time.setTimeout(() => {
+        timeouts['invalidMove'] = Time.setTimeout(() => {
             // Position to move toward is invalid - change to crash animation clip
             Patches.inputs.setScalar('pirate_animation', 2);
+            FALL_AUDIO.setPlaying(true)
+            FALL_AUDIO.reset()
         }, 500)
 
         return agentPosition;
@@ -325,8 +362,10 @@ function moveAgent(agent, agentPosition) {
         playerLost = true;
         
         // Dead - Change to crash animation clip
-        Time.setTimeout(() => {
+        timeouts['movedBackwards'] = Time.setTimeout(() => {
             Patches.inputs.setScalar('pirate_animation', 2);
+            FALL_AUDIO.setPlaying(true)
+            FALL_AUDIO.reset()
         }, 500)
 
         return agentPosition;
@@ -334,9 +373,21 @@ function moveAgent(agent, agentPosition) {
         Diagnostics.log("Hit obstacle")
         playerLost = true;
 
-        Time.setTimeout(() => {
+        timeouts['hitObstacle'] = Time.setTimeout(() => {
             // Position to move toward is invalid - change to crash animation clip
             Patches.inputs.setScalar('pirate_animation', 2);
+
+            switch (positionTilesMapping[destinationPosition].type) {
+                case 'spike':
+                    SPIKE_AUDIO.setPlaying(true)
+                    SPIKE_AUDIO.reset()
+                    break
+                case 'bomb':
+                    BOMB_AUDIO.setPlaying(true)
+                    BOMB_AUDIO.reset()
+                    break
+                default:
+            }
         }, 500)
     }
 
@@ -346,10 +397,12 @@ function moveAgent(agent, agentPosition) {
 
         // Animate chest open and player win animation
         animateChestOpen()
-        Time.setTimeout(() => {
+        CELEBRATE_AUDIO.setPlaying(true)
+        CELEBRATE_AUDIO.reset()
+        timeouts['rotateAgent'] = Time.setTimeout(() => {
             animateRotateAgent(agent, "down", true)
 
-            Time.setTimeout(() => {
+            timeouts['nextLevel'] = Time.setTimeout(() => {
                 if (currentLevel === 5) { 
                     Diagnostics.log("World completed!")
                     // TODO: Game end animation
@@ -392,6 +445,13 @@ function getCoordinateZFromIndex(index) {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
+}
+
+function calculateMinAngle(currentDeg, DestDeg1, DestDeg2) {
+    if (Math.abs(currentDeg - degreesToRadians(DestDeg1)) > Math.abs(currentDeg - degreesToRadians(DestDeg2)))
+        return degreesToRadians(DestDeg2)
+    else
+        return degreesToRadians(DestDeg1)
 }
 
 function degreesToRadians(degrees) {
@@ -451,10 +511,10 @@ const shiftz = (td, obj, destination) =>
 function animateTileSwap(tile1, tile2) {
     const tdTileSwap = getTimeDriver();
 
-    let tile1x = tile1.transform.x.lastValue;
-    let tile1z = tile1.transform.z.lastValue;
-    tile1.transform.x = shiftx(tdTileSwap, tile1, tile2.transform.x.lastValue);
-    tile1.transform.z = shiftz(tdTileSwap, tile1, tile2.transform.z.lastValue);
+    let tile1x = tile1.transform.x.pinLastValue();
+    let tile1z = tile1.transform.z.pinLastValue();
+    tile1.transform.x = shiftx(tdTileSwap, tile1, tile2.transform.x.pinLastValue());
+    tile1.transform.z = shiftz(tdTileSwap, tile1, tile2.transform.z.pinLastValue());
     tile2.transform.x = shiftx(tdTileSwap, tile2, tile1x);
     tile2.transform.z = shiftz(tdTileSwap, tile2, tile1z);
     tileIsAnimating = true
@@ -467,35 +527,58 @@ function animateTileSwap(tile1, tile2) {
 function animateRotateAgent(agent, direction, win = false) {
     const tdRotateAgent = getTimeDriver()
     let angles = {
-        "up": degreesToRadians(180),
-        "down": degreesToRadians(0),
-        "right": degreesToRadians(90),
-        "left": degreesToRadians(270)
+        "up": calculateMinAngle(agent.transform.rotationY.pinLastValue(), 180, -180),
+        "down": calculateMinAngle(agent.transform.rotationY.pinLastValue(), 0, 360),
+        "right": calculateMinAngle(agent.transform.rotationY.pinLastValue(), 90, -270),
+        "left": calculateMinAngle(agent.transform.rotationY.pinLastValue(), 270, -90),
     }
 
     agent.transform.rotationY = Animation.animate(
         tdRotateAgent,
-        Animation.samplers.linear(angles[agentDirection], win ? degreesToRadians(-360) : angles[direction])
+        Animation.samplers.linear(agent.transform.rotationY.pinLastValue(), win ? degreesToRadians(-360) : angles[direction])
     )
     tdRotateAgent.start()
 }
 
-function animateMoveAgent(agent, destinationPosition, direction) {
+function animateMoveAgent(agent, destinationPosition, direction, units) {
     
     /* 
     Set animation controller in patch editor by passing int as scalarValue
     0: idle
     1: walk
+    2: crash
+    3: jump
+    4: run
     */
-    Patches.inputs.setScalar('pirate_animation', 1)
-
+    
     // Rotate agent to face direction
     if (direction !== agentDirection) {
         animateRotateAgent(agent, direction)
         agentDirection = direction
     }
 
-    // Diagnostics.log(destinationPosition);
+    if (units > 1) {
+        // Animate jump
+        Patches.inputs.setScalar('pirate_animation', 3)
+        PIRATE_JUMP_AUDIO.setPlaying(true);
+        PIRATE_JUMP_AUDIO.reset();
+
+        const tdAgentJump = getTimeDriver(250, 2, true);
+
+        agent.transform.y = Animation.animate(
+            tdAgentJump, 
+            Animation.samplers.easeInOutBounce(agent.transform.y.pinLastValue(), 
+                units === 2 
+                ? agent.transform.y.pinLastValue() + 0.06
+                : agent.transform.y.pinLastValue() + 0.1)
+        )
+        tdAgentJump.start()
+    } else {
+        // Animate walk
+        Patches.inputs.setScalar('pirate_animation', 1)
+        PIRATE_WALK_AUDIO.setPlaying(true);
+        PIRATE_WALK_AUDIO.reset();
+    }
 
     // Animate agent towards direction
     const tdAgentMove = getTimeDriver(500);
@@ -504,7 +587,7 @@ function animateMoveAgent(agent, destinationPosition, direction) {
     agent.transform.x = shiftx(tdAgentMove, agent, point[0]);
     agent.transform.z = shiftz(tdAgentMove, agent, point[1]);
     tdAgentMove.start();
-    Time.setTimeout(() => {
+    timeouts['stopAgent'] = Time.setTimeout(() => {
         // Set back to idle after each step
         if (!playerLost) {
             Patches.inputs.setScalar('pirate_animation', 0)
@@ -519,6 +602,27 @@ function animateTileVisited(tile) {
         })
 }
 
+function unanimateAllVisitedTiles() {
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findAll("Box001__0")
+                .then(meshes => meshes.forEach(mesh => {
+                    if (currentWorld === 1) {
+                        Materials.findFirst('chevron_yellow')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    } 
+                    else if (currentWorld === 2) {
+                        Materials.findFirst('dirt')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    }
+                }))
+        })
+}
+
 function animateChestOpen() {
     Scene.root.findFirst(`world${currentWorld}`)
         .then(world => {
@@ -530,8 +634,17 @@ function animateChestOpen() {
                             treasure.transform.y = shifty(tdChestOpen, treasure, treasure.transform.y.pinLastValue() + 1.5)
                             tdChestOpen.start()
                             // Open treasure chest
-                            Patches.inputs.setScalar('chest_animation', 1);
+                            Patches.inputs.setScalar(`chest_${currentLevel}_animation`, 1);
                         })
                 ))
         })
+}
+
+function unanimateAllChests() {
+    Scene.root.findAll("treasure")
+        .then(treasures => treasures.forEach(treasure => {
+            if (treasure.transform.y.pinLastValue() > 2) {
+                treasure.transform.y = treasure.transform.y.pinLastValue() - 1.5
+            }
+        }))
 }

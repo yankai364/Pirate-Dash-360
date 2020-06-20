@@ -115,7 +115,7 @@ worlds["world2"] = {
         [11,4,'down',true,1],
         [12,4,'right',true,1],
     ]),
-    level2: generateLevel([15,5,'down'],[17,9],
+    level2: generateLevel([15,5,'down'],[18,10],
     [
     	[15,6,'right',true, 1],
         [15,7,'spike',false,0],
