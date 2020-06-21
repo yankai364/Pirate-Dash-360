@@ -98,6 +98,9 @@ Promise.all([
 
 function initWorld() {
 
+    // Hide container for loading
+    Scene.root.findFirst('container').then(container => container.hidden = true)
+
     // Reset world variables
     positionTilesMapping = {}
     tilesPositionMapping = {}
@@ -138,11 +141,8 @@ function initWorld() {
                     world.findFirst(`level${j}`)
                         .then(level => {
                             if (i === currentWorld && j === 1) {
-                                // Update level variable and show level
+                                // Update level variable and initialize level 1
                                 currentLevel = 1
-                                level.hidden = false
-
-                                // Initialize level 1
                                 initLevel()
                             } else {
                                 // Hide all levels except level 1 of current world
@@ -152,6 +152,11 @@ function initWorld() {
                 }
             })
     }
+
+    // Buffer for loading
+    timeouts['showContainer'] = Time.setTimeout(() => {
+        Scene.root.findFirst('container').then(container => container.hidden = false)
+    }, 300)
 }
 
 function initLevel() {
@@ -215,8 +220,8 @@ function initLevel() {
         .then(world => {
             world.findFirst(`level${currentLevel}`)
                 .then(level => {
-                    // Show level
-                    level.hidden = false
+                    // Hide level for loading
+                    level.hidden = true
                     let tilePositionsCopy = tilePositions.slice()
         
                     // Loop through directional tiles and place them at a random position
@@ -263,6 +268,11 @@ function initLevel() {
         
                     // Place obstacle tiles at fixed positions
                     obstacles && obstacles.forEach(obstacle => placeTile(obstacle, obstacle.position))
+
+                    // Buffer for loading
+                    timeouts['showLevel'] = Time.setTimeout(() => {
+                        level.hidden = false
+                    }, 200)
                 })
         })
 }
@@ -354,6 +364,9 @@ function moveAgent(agent, agentPosition) {
             Patches.inputs.setScalar('pirate_animation', 2);
             FALL_AUDIO.setPlaying(true)
             FALL_AUDIO.reset()
+
+            // Animate agent falling
+            animateObjectFall(agent)
         }, 500)
 
         return agentPosition;
@@ -366,6 +379,15 @@ function moveAgent(agent, agentPosition) {
             Patches.inputs.setScalar('pirate_animation', 2);
             FALL_AUDIO.setPlaying(true)
             FALL_AUDIO.reset()
+
+            // Animate tile and agent falling
+            Scene.root.findFirst(`world${currentWorld}`)
+                .then(world => {
+                    world.findFirst(`level${currentLevel}`)
+                        .then(level => level.findFirst(positionTilesMapping[destinationPosition].name)
+                            .then(tile => animateObjectFall(tile)))
+                })
+            timeouts['agentFall'] = Time.setTimeout(() => animateObjectFall(agent), 100)
         }, 500)
 
         return agentPosition;
@@ -681,7 +703,17 @@ function unanimateAllChests() {
     Scene.root.findAll("treasure")
         .then(treasures => treasures.forEach(treasure => {
             if (treasure.transform.y.pinLastValue() > 2) {
-                treasure.transform.y = treasure.transform.y.pinLastValue() - 1.5
+                treasure.transform.y = treasure.transform.y.pinLastValue() - 1.8
             }
         }))
+}
+
+function animateObjectFall(obj) {
+    const tdObjFall = getTimeDriver(300)
+
+    obj.transform.y = Animation.animate(
+        tdObjFall,
+        Animation.samplers.linear(obj.transform.y.pinLastValue(), obj.transform.y.pinLastValue() - 3)
+    )
+    tdObjFall.start()
 }
