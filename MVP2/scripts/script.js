@@ -280,7 +280,23 @@ function initLevel() {
         })
 }
 
+function restartLevel() {
+    timeouts['restartLevel'] = Time.setTimeout(() => {
+        
+        // Kill intervals and timeouts, stop audio and unsubscribe event listeners to prevent glitches/bugs
+        moveAgentIntervalID && Time.clearInterval(moveAgentIntervalID)
+        Object.values(timeouts).forEach(timeoutID => Time.clearTimeout(timeoutID))
+        pirateSubscription && pirateSubscription.unsubscribe()
+        tileSubscriptions && tileSubscriptions.map(subscription => subscription.unsubscribe())
 
+        // Clear variables and restart level
+        positionVisited = {}
+        playerWin = false;
+        playerLost = false;
+        unanimateLevelVisitedTiles()
+        initLevel()
+    }, 3000)
+}
 
 
 // Helper functions
@@ -370,6 +386,8 @@ function moveAgent(agent, agentPosition) {
 
             // Animate agent falling
             animateObjectFall(agent)
+            
+            restartLevel()
         }, 500)
 
         return agentPosition;
@@ -391,6 +409,8 @@ function moveAgent(agent, agentPosition) {
                             .then(tile => animateObjectFall(tile)))
                 })
             timeouts['agentFall'] = Time.setTimeout(() => animateObjectFall(agent), 100)
+            
+            restartLevel()
         }, 500)
 
         return agentPosition;
@@ -427,6 +447,8 @@ function moveAgent(agent, agentPosition) {
                     break
                 default:
             }
+
+            restartLevel()
         }, 500)
     }
 
@@ -696,6 +718,30 @@ function unanimateAllVisitedTiles() {
                             })
                     }
                 }))
+        })
+}
+
+function unanimateLevelVisitedTiles() {
+    Scene.root.findFirst(`world${currentWorld}`)
+        .then(world => {
+            world.findFirst(`level${currentLevel}`)
+                .then(level => {
+                    level.findAll("Box001__0")
+                        .then(meshes => meshes.forEach(mesh => {
+                            if (currentWorld === 1) {
+                                Materials.findFirst('chevron_yellow')
+                                    .then(mat => {
+                                        mesh.material = mat
+                                    })
+                            } 
+                            else if (currentWorld === 2) {
+                                Materials.findFirst('dirt')
+                                    .then(mat => {
+                                        mesh.material = mat
+                                    })
+                            }
+                        }))
+                })
         })
 }
 
