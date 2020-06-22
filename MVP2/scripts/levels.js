@@ -121,7 +121,7 @@ worlds["world2"] = {
         [15,9,'spike',false,0],
         [15,10,'spike',false,0],
         [15,11,'down',true,1],
-        [16,8,'down',true, 2],
+        [16,8,'down',false, 2],
         [16,9,'spike',false, 0],
         [16,10,'right',true, 1],
         [16,11,'bomb',false, 0],
@@ -158,7 +158,7 @@ worlds["world2"] = {
     [
     	[12,15,'left',true,2],
         [11,15,'spike',false,0],
-        [10,15,'down',true,3],
+        [10,15,'down',false,3],
         [9,15,'right',true,1],
         [8,15,'spike',false,0],
         [12,16,'down',true,1],
@@ -166,28 +166,26 @@ worlds["world2"] = {
         [10,16,'spike',false,0],
         [9,16,'right',true,1],
         [8,16,'bomb',false,0],
-        [12,17,'left',true,1],
+        [12,17,'down',false,2],
         [11,17,'spike',false,0],
         [10,17,'spike',false,0],
-        [9,17,'left',true,2],
+        [9,17,'up',true,2],
         [8,17,'spike',false,0],
-        [12,18,'down',true,1],
+        [12,18,'up',true,1],
         [11,18,'bomb',false,0],
-        [10,18,'right',true,2],
-        [9,18,'left',true,1],
+        [10,18,'right',false,2],
+        [9,18,'up',true,1],
         [8,18,'spike',false,0],
         [12,19,'left',true,3],
         [11,19,'bomb',false,0],
-        [10,19,'right',true,1],
-        [9,19,'left',true,2],
-        [8,19,'left',true,1],
-        
-        
+        [10,19,'left',true,3],
+        [9,19,'left',true,1],
+        [8,19,'right',true,2],
     ]),
     level5: generateLevel([6,14,'up'],[2,8],
     [
     	[6,13,'left',true,2],
-        [6,12,'up',true,1],
+        [6,12,'down',false,1],
         [6,11,'up',true,1],
         [6,10,'up',true,1],
         [6,9,'left',true,2],
@@ -231,7 +229,8 @@ function generateLevel(startPos, endPos, positions){
         	obstacleTilePositions.push({
             	name: "tile" + (i+1),
                	type: position[2],
-           		position: position.slice(0,2)
+                position: position.slice(0,2),
+                units: position[4],   
             })
         }
     }

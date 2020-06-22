@@ -359,7 +359,8 @@ function swapTiles(position1, position2, selection, tileUi) {
 }
 
 function moveAgent(agent, agentPosition) {
-    let direction = positionTilesMapping[agentPosition].direction;
+    // Fixed tiles will have direction stored in type property
+    let direction = positionTilesMapping[agentPosition].direction || positionTilesMapping[agentPosition].type;
     let units = positionTilesMapping[agentPosition].units;
     
     // Handle visited tile
@@ -427,7 +428,7 @@ function moveAgent(agent, agentPosition) {
         }, 500)
 
         return agentPosition;
-    } else if (positionTilesMapping[destinationPosition].type) {
+    } else if (["bomb", "spike"].includes(positionTilesMapping[destinationPosition].type)) {
         Diagnostics.log("Hit obstacle")
         playerLost = true;
 
