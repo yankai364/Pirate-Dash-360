@@ -181,6 +181,19 @@ function initLevel() {
     // Hide bomb fire
     Scene.root.findFirst("fire").then(fire => fire.hidden = true)
 
+    // Increase opacity of instructions/level display for levels above current
+    for (let i = 0; i < Object.keys(LEVELS[`world${currentWorld}`]).length; i++) {
+        Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_level${i + 1}_instruction`)
+            .then(mat => {
+                if (i + 1 <= currentLevel) {
+                    mat.opacity = 1
+                } else {
+                    mat.opacity = 0.35
+                }
+            })
+        Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_complete`).then(mat => mat.opacity = 0)
+    }
+
     // Place character on start tile
     Scene.root.findFirst("pirate")
         .then(agent => {
@@ -473,6 +486,10 @@ function moveAgent(agent, agentPosition) {
             timeouts['nextLevel'] = Time.setTimeout(() => {
                 if (currentLevel === 5) { 
                     Diagnostics.log("World completed!")
+
+                    // Show world completed display
+                    Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_complete`).then(mat => mat.opacity = 1)
+
                     // TODO: Game end animation
     
                 } else {
