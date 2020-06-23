@@ -18,6 +18,7 @@ const CELEBRATE_AUDIO = Audio.getPlaybackController("celebrate_audio")
 const FALL_AUDIO = Audio.getPlaybackController("fall_audio")
 const SPIKE_AUDIO = Audio.getPlaybackController("spike_audio")
 const BOMB_AUDIO = Audio.getPlaybackController("bomb_audio")
+const INVALID_AUDIO = Audio.getPlaybackController("error_audio_2")
 
 // Tile dimensions
 const UNIT_LENGTH = 0.15; // x length and z length
@@ -123,6 +124,7 @@ function initWorld() {
     FALL_AUDIO.setPlaying(false)
     SPIKE_AUDIO.setPlaying(false)
     BOMB_AUDIO.setPlaying(false)
+    INVALID_AUDIO.setPlaying(false)
 
     // Hide worlds and levels
     for (let i = 1; i <= Object.keys(LEVELS).length; i++) {
@@ -152,6 +154,17 @@ function initWorld() {
                 }
             })
     }
+
+    // Hide level transition mover
+    Scene.root.findFirst("mover").then(mover => mover.hidden = true)
+
+    // Place ship
+    Scene.root.findFirst("ship_light").then(ship => {
+        ship.transform.x = -0.47207
+        ship.transform.y = -0.84193
+        ship.transform.z = 0.65243
+        ship.transform.rotationY = 0
+    })
 
     // Buffer for loading
     timeouts['showContainer'] = Time.setTimeout(() => {
@@ -199,15 +212,17 @@ function initLevel() {
         .then(agent => {
             let agentPosition = startTile.position
             let point = getMidPointFromIndex(agentPosition);
-            agent.transform.x = point[0];
-            agent.transform.y = TOP_LEFT_Y + 0.11; // To check height
-            agent.transform.z = point[1];
+            timeouts['agentAppearBuffer'] = Time.setTimeout(() => {
+                agent.transform.x = point[0];
+                agent.transform.y = TOP_LEFT_Y + 0.11; // To check height
+                agent.transform.z = point[1];
 
-            // Update agent direction at start tile
-            animateRotateAgent(agent, agentDirection)
+                // Update agent direction at start tile
+                animateRotateAgent(agent, agentDirection)
 
-            // Set agent animation clip to idle
-            Patches.inputs.setScalar('pirate_animation', 0);
+                // Set agent animation clip to idle
+                Patches.inputs.setScalar('pirate_animation', 0);
+            }, 500)
             
             // Listen for tap on character
             pirateSubscription = TouchGestures.onTap(agent).subscribe(function (gesture) {
@@ -252,30 +267,32 @@ function initLevel() {
         
                             // For each tile, prepare listener for tap event
                             let tileSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
-                                if (!ready) {       
-                                    if (!tileIsAnimating) {
-                                        if (selection === null) {
-                                            // if there is no active tile
-                                            selection = tileUi
-                                            selectionPosition = tilesPositionMapping[tilePattern.name]
-                                            animateTileSelect(tileUi, "active")
-                                        } else {
-                                            // if active tile is same as selection, de-select tile
-                                            if (tileUi === selection) {
-                                                animateTileSelect(tileUi, "blur")
-                                                selection = null
-                                                selectionPosition = null
-                                            }
-                                            // swap tiles
-                                            else {
-                                                swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
-                                                animateTileSelect(selection, "blur")
-                                                selection = null
-                                                selectionPosition = null
+                                timeouts['concurrentTapBuffer'] = Time.setTimeout(() => {
+                                    if (!ready) {
+                                        if (!tileIsAnimating) {
+                                            if (selection === null) {
+                                                // if there is no active tile
+                                                selection = tileUi
+                                                selectionPosition = tilesPositionMapping[tilePattern.name]
+                                                animateTileSelect(tileUi, "active")
+                                            } else {
+                                                // if active tile is same as selection, de-select tile
+                                                if (tileUi === selection) {
+                                                    animateTileSelect(tileUi, "blur")
+                                                    selection = null
+                                                    selectionPosition = null
+                                                }
+                                                // swap tiles
+                                                else {
+                                                    swapTiles(selectionPosition, tilesPositionMapping[tilePattern.name], selection, tileUi)
+                                                    animateTileSelect(selection, "blur")
+                                                    selection = null
+                                                    selectionPosition = null
+                                                }
                                             }
                                         }
                                     }
-                                }
+                                }, 100)
                             });
                             
                             tileSubscriptions.push(tileSubscription)
@@ -283,7 +300,21 @@ function initLevel() {
                     })
         
                     // Place obstacle tiles at fixed positions
-                    obstacles && obstacles.forEach(obstacle => placeTile(obstacle, obstacle.position))
+                    obstacles && obstacles.forEach(obstacle => {
+                        placeTile(obstacle, obstacle.position)
+
+                        // For each tile, prepare listener for tap event
+                        level.findFirst(obstacle.name)
+                            .then(tileUi => {
+                                let obstacleSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
+                                    if (!ready) {
+                                        INVALID_AUDIO.setPlaying(true)
+                                        INVALID_AUDIO.reset()
+                                    }
+                                })
+                                tileSubscriptions.push(obstacleSubscription)
+                            })
+                    })
 
                     // Buffer for loading
                     timeouts['showLevel'] = Time.setTimeout(() => {
@@ -488,11 +519,20 @@ function moveAgent(agent, agentPosition) {
                 if (currentLevel === 5) { 
                     Diagnostics.log("World completed!")
 
+                    // Unsubscribe event listeners
+                    Time.clearInterval(moveAgentIntervalID)
+                    pirateSubscription.unsubscribe()
+                    tileSubscriptions.map(subscription => subscription.unsubscribe())
+
                     // Show world completed display
                     Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_complete`).then(mat => mat.opacity = 1)
 
                     // TODO: Game end animation
-    
+                    Scene.root.findFirst("mover")
+                        .then(mover => {
+                            animateMoveAgentAndPlatform(mover, agent, [3,8], 'right', [6,6], [7,6], 'right')
+                            timeouts['gameEndTransition'] = Time.setTimeout(() => animateGameEnd(agent), 2500)
+                        })
                 } else {
                     // Advance to next level
                     currentLevel += 1
@@ -503,11 +543,11 @@ function moveAgent(agent, agentPosition) {
                     tileSubscriptions.map(subscription => subscription.unsubscribe())
                     
                     // TODO: Level transition
-                    
+                    animateLevelTransition(agent)
 
-                    initLevel()
+                    timeouts['levelTransition'] = Time.setTimeout(() => initLevel(), 2500)
                 }
-            }, 5000)
+            }, 4000)
         }, 700)
     }
 
@@ -797,4 +837,200 @@ function animateObjectFall(obj) {
         Animation.samplers.linear(obj.transform.y.pinLastValue(), obj.transform.y.pinLastValue() - 3)
     )
     tdObjFall.start()
+}
+
+function animateLevelTransition(agent) {
+
+    Scene.root.findFirst("mover")
+        .then(mover => {
+            switch (currentLevel) {
+                case 2:
+                    animateMoveAgentAndPlatform(mover, agent, [13,5], 'down', [15,6], [15,7], 'down')
+                    break
+                case 3:
+                    if (currentWorld === 1)
+                        animateMoveAgentAndPlatform(mover, agent, [16,11], 'left', [15,13], [15,14], 'down')
+                    else if (currentWorld === 2)
+                        animateMoveAgentAndPlatform(mover, agent, [17,12], 'left', [15,13], [15,14], 'down')
+                    break
+                case 4:
+                    animateMoveAgentAndPlatformTwoSteps(mover, agent, [17,19], 'left', [13,19], [13,16], [13,15], 'up')
+                    break
+                case 5:
+                    animateMoveAgentAndPlatform(mover, agent, [7,18], 'up', [6,15], [6,14], 'up')
+                    break
+                default:
+            }
+        })
+}
+
+function animateMoveAgentAndPlatform(mover, agent, moverPosition, hopOnDirection, moverDestination, newStartPosition, hopOffDirection) {
+    const tdMoverFall = getTimeDriver(300)
+    const tdMoverMove = getTimeDriver(1000)
+
+    // Drop mover from sky
+    mover.hidden = false
+    mover.transform.x = getCoordinateXFromIndex(moverPosition[0])
+    mover.transform.z = getCoordinateZFromIndex(moverPosition[1])
+    mover.transform.y = Animation.animate(
+        tdMoverFall,
+        Animation.samplers.easeInOutBounce(2, -0.7588)
+    )
+    tdMoverFall.start()
+    
+    timeouts['levelTransitionAgentMoveOn'] = Time.setTimeout(() => {
+        // Move agent onto platform
+        animateMoveAgent(agent, moverPosition, hopOnDirection, 2)
+
+        timeouts['levelTransitionPlatformMove'] = Time.setTimeout(() => {
+            // Move platform to new start tile
+            mover.transform.x = Animation.animate(
+                tdMoverMove,
+                Animation.samplers.linear(mover.transform.x.pinLastValue(), getCoordinateXFromIndex(moverDestination[0]))
+            )
+            mover.transform.z = Animation.animate(
+                tdMoverMove,
+                Animation.samplers.linear(mover.transform.z.pinLastValue(), getCoordinateZFromIndex(moverDestination[1]))
+            )
+
+            // Move agent with platform
+            const midpoints = getMidPointFromIndex(moverDestination)
+            agent.transform.x = Animation.animate(
+                tdMoverMove,
+                Animation.samplers.linear(agent.transform.x.pinLastValue(), midpoints[0])
+            )
+            agent.transform.z = Animation.animate(
+                tdMoverMove,
+                Animation.samplers.linear(agent.transform.z.pinLastValue(), midpoints[1])
+            )
+            tdMoverMove.start()
+            
+            timeouts['levelTransitionAgentMoveOff'] = Time.setTimeout(() => {
+                // Move agent off platform
+                animateMoveAgent(agent, newStartPosition, hopOffDirection, 2)
+            }, 1000)
+        }, 1000)
+    }, 300)
+}
+
+function animateMoveAgentAndPlatformTwoSteps(mover, agent, moverPosition, hopOnDirection, moverDestination1, moverDestination2, newStartPosition, hopOffDirection) {
+    const tdMoverFall = getTimeDriver(300)
+    const tdMoverMove1 = getTimeDriver(500)
+    const tdMoverMove2 = getTimeDriver(500)
+
+    // Drop mover from sky
+    mover.hidden = false
+    mover.transform.x = getCoordinateXFromIndex(moverPosition[0])
+    mover.transform.z = getCoordinateZFromIndex(moverPosition[1])
+    mover.transform.y = Animation.animate(
+        tdMoverFall,
+        Animation.samplers.easeInOutBounce(2, -0.7588)
+    )
+    tdMoverFall.start()
+    
+    timeouts['levelTransitionAgentMoveOn'] = Time.setTimeout(() => {
+        // Move agent onto platform
+        animateMoveAgent(agent, moverPosition, hopOnDirection, 2)
+
+        timeouts['levelTransitionPlatformMove'] = Time.setTimeout(() => {
+            // Move platform to midpoint
+            mover.transform.x = Animation.animate(
+                tdMoverMove1,
+                Animation.samplers.linear(mover.transform.x.pinLastValue(), getCoordinateXFromIndex(moverDestination1[0]))
+            )
+            mover.transform.z = Animation.animate(
+                tdMoverMove1,
+                Animation.samplers.linear(mover.transform.z.pinLastValue(), getCoordinateZFromIndex(moverDestination1[1]))
+            )
+
+            // Move agent with platform
+            let midpoints = getMidPointFromIndex(moverDestination1)
+            agent.transform.x = Animation.animate(
+                tdMoverMove1,
+                Animation.samplers.linear(agent.transform.x.pinLastValue(), midpoints[0])
+            )
+            agent.transform.z = Animation.animate(
+                tdMoverMove1,
+                Animation.samplers.linear(agent.transform.z.pinLastValue(), midpoints[1])
+            )
+            tdMoverMove1.start()
+
+            timeouts['levelTransitionAgentMoveOff'] = Time.setTimeout(() => {
+                // Begin second half of movement
+                // Move platform to new start tile
+                mover.transform.x = Animation.animate(
+                    tdMoverMove2,
+                    Animation.samplers.linear(mover.transform.x.pinLastValue(), getCoordinateXFromIndex(moverDestination2[0]))
+                )
+                mover.transform.z = Animation.animate(
+                    tdMoverMove2,
+                    Animation.samplers.linear(mover.transform.z.pinLastValue(), getCoordinateZFromIndex(moverDestination2[1]))
+                )
+
+                // Move agent with platform
+                midpoints = getMidPointFromIndex(moverDestination2)
+                agent.transform.x = Animation.animate(
+                    tdMoverMove2,
+                    Animation.samplers.linear(agent.transform.x.pinLastValue(), midpoints[0])
+                )
+                agent.transform.z = Animation.animate(
+                    tdMoverMove2,
+                    Animation.samplers.linear(agent.transform.z.pinLastValue(), midpoints[1])
+                )
+                tdMoverMove2.start()
+            }, 500)
+            
+            timeouts['levelTransitionAgentMoveOff'] = Time.setTimeout(() => {
+                // Move agent off platform
+                animateMoveAgent(agent, newStartPosition, hopOffDirection, 2)
+            }, 1000)
+        }, 1000)
+    }, 300)
+}
+
+function animateGameEnd(agent) {
+    const tdReverse = getTimeDriver(1000)
+    const tdRotate = getTimeDriver(1000)
+    const tdMove = getTimeDriver(2000)
+
+    // Reverse ship and player
+    Scene.root.findFirst("ship_light")
+        .then(ship => {
+            ship.transform.z = Animation.animate(
+                tdReverse,
+                Animation.samplers.easeInOutExpo(ship.transform.z.pinLastValue(), ship.transform.z.pinLastValue() - 0.85)
+            )
+            agent.transform.z = Animation.animate(
+                tdReverse,
+                Animation.samplers.easeInOutExpo(agent.transform.z.pinLastValue(), agent.transform.z.pinLastValue() - 0.85)
+            )
+
+            tdReverse.start()
+
+            timeouts['shipRotate'] = Time.setTimeout(() => {
+                ship.transform.rotationY = Animation.animate(
+                    tdRotate,
+                    Animation.samplers.easeInOutExpo(ship.transform.rotationY.pinLastValue(), degreesToRadians(180))
+                )
+                agent.transform.x = Animation.animate(
+                    tdRotate,
+                    Animation.samplers.linear(agent.transform.x.pinLastValue(), agent.transform.x.pinLastValue() + 0.075)
+                )
+
+                tdRotate.start()
+
+                timeouts['shipMoveOff'] = Time.setTimeout(() => {
+                    ship.transform.z = Animation.animate(
+                        tdMove,
+                        Animation.samplers.easeInOutExpo(ship.transform.z.pinLastValue(), ship.transform.z.pinLastValue() - 17.8)
+                    )
+                    agent.transform.z = Animation.animate(
+                        tdMove,
+                        Animation.samplers.easeInOutExpo(agent.transform.z.pinLastValue(), agent.transform.z.pinLastValue() - 17.8)
+                    )
+
+                    tdMove.start()
+                }, 1000)
+            }, 1000)
+        })
 }
