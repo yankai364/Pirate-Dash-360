@@ -225,7 +225,7 @@ worlds["world3"] = {
         [10,4,'right',true,1],
         [11,4,'right',true,1],
         [12,4,'right',true,1],
-    ]),
+    ], [], [[10,4],[11,4],[12,6]]),
     level2: generateLevel([15,7,'down'],[18,12],
     [
     	[15,8,'right',true, 1],
@@ -244,8 +244,7 @@ worlds["world3"] = {
         [18,9,'down',true, 2],
         [18,10,'bomb',false, 0],
         [18,11,'down',true, 1],
-        
-    ]),
+    ], [11,13,14]),
     level3: generateLevel([15,14,'down'],[18,19],
     [
     	[15,15,'right',true,1],
@@ -264,7 +263,7 @@ worlds["world3"] = {
         [18,16,'down',true,1],
         [18,17,'left',false,1],
         [18,18,'down',true,1],
-    ]),
+    ], [3,4,5,11], [[15,16],[17,15],[18,15]]),
     level4: generateLevel([13,15,'left'],[7,19],
     [
     	[12,15,'left',true,2],
@@ -292,7 +291,7 @@ worlds["world3"] = {
         [10,19,'left',true,3],
         [9,19,'left',true,1],
         [8,19,'right',true,2],
-    ]),
+    ], [6,11,14,19], [[9,16],[11,16],[9,19],[10,19]]),
     level5: generateLevel([6,14,'up'],[2,8],
     [
     	[6,13,'left',true,2],
@@ -320,10 +319,10 @@ worlds["world3"] = {
         [2,11,'spike',false,0],
         [2,10,'up',true,2],
         [2,9,'spike',false,0]
-    ])
+    ], [4,16,19,20], [[6,10],[3,10],[3,13],[4,13]]),
 }
 
-function generateLevel(startPos, endPos, positions){
+function generateLevel(startPos, endPos, positions, flippedTiles = [], cloudPositions = []){
     let totalTiles = positions.length + 2;
     let tilePatterns = [];
     let obstacleTilePositions = [];
@@ -364,7 +363,9 @@ function generateLevel(startPos, endPos, positions){
         	name: "tileEnd",
             position: endPos
         },
-        tilePatterns: tilePatterns
+        tilePatterns: tilePatterns,
+        flippedTiles: flippedTiles,
+        cloudPositions: cloudPositions
     }
 }
 

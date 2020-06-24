@@ -48,6 +48,8 @@ let tilePatterns = level.tilePatterns;
 let obstacles = level.obstacleTilePositions;
 let startTile = level.startTile;
 let endTile = level.endTile;
+let flippedTiles = level.flippedTiles
+let cloudPositions = level.cloudPositions
 
 // Gameflow variables
 let ready = false;
@@ -182,6 +184,8 @@ function initLevel() {
     tilePositions = level.tilePositions;
     tilePatterns = level.tilePatterns;
     obstacles = level.obstacleTilePositions;
+    flippedTiles = level.flippedTiles
+    cloudPositions = level.cloudPositions
     startTile = level.startTile;
     endTile = level.endTile;
     agentDirection = startTile.direction
@@ -199,7 +203,7 @@ function initLevel() {
 
     // Increase opacity of instructions/level display for levels above current
     for (let i = 0; i < Object.keys(LEVELS[`world${currentWorld}`]).length; i++) {
-        Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_level${i + 1}_instruction`)
+        Materials.findFirst(`${currentWorld === 1 ? 'grass' : currentWorld === 2 ? 'snow' : 'desert'}_level${i + 1}_instruction`)
             .then(mat => {
                 if (i + 1 <= currentLevel) {
                     mat.opacity = 1
@@ -207,7 +211,7 @@ function initLevel() {
                     mat.opacity = 0.35
                 }
             })
-        Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_complete`).then(mat => mat.opacity = 0)
+        Materials.findFirst(`${currentWorld === 1 ? 'grass' : currentWorld === 2 ? 'snow' : 'desert'}_complete`).then(mat => mat.opacity = 0)
     }
 
     // Place character on start tile
@@ -368,6 +372,17 @@ function placeTile(tilePattern, position) {
             world.findFirst(`level${currentLevel}`)
                 .then(level => level.findFirst(tilePattern.name)
                     .then(tileUi => {
+                        // Handle chevron opacity if concealed by cloud
+                        if (cloudPositions && JSON.stringify(cloudPositions).includes(JSON.stringify(position))) {
+                            Materials.findFirst("invisible_chevron")
+                                .then(mat => {
+                                    tileUi.findAll("Box001__0")
+                                        .then(meshes => meshes.forEach(mesh => {
+                                            mesh.material = mat
+                                        }))
+                                })
+                        }
+
                         // Set tile position
                         tileUi.transform.x = getCoordinateXFromIndex(position[0]);
                         tileUi.transform.y = 2;
@@ -392,6 +407,57 @@ function swapTiles(position1, position2, selection, tileUi) {
     tilesPositionMapping[tilePattern2.name] = position1
     positionTilesMapping[position2] = tilePattern1
     tilesPositionMapping[tilePattern1.name] = position2
+
+    // Handle swapping concealed tiles
+    tileUi.findAll("Box001__0")
+        .then(meshes => meshes.forEach(mesh => {
+            if (cloudPositions && JSON.stringify(cloudPositions).includes(JSON.stringify(position1))) {
+                Materials.findFirst("invisible_chevron")
+                    .then(mat => mesh.material = mat)
+            } else {
+                if (currentWorld === 1) {
+                    Materials.findFirst('chevron_yellow')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                } 
+                else if (currentWorld === 2) {
+                    Materials.findFirst('dirt')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                } else if (currentWorld === 3) {
+                    Materials.findFirst('chevron_yellow')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                }
+            }}))
+
+    selection.findAll("Box001__0")
+        .then(meshes => meshes.forEach(mesh => {
+            if (cloudPositions && JSON.stringify(cloudPositions).includes(JSON.stringify(position2))) {
+                Materials.findFirst("invisible_chevron")
+                    .then(mat => mesh.material = mat)
+            } else {
+                if (currentWorld === 1) {
+                    Materials.findFirst('chevron_yellow')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                } 
+                else if (currentWorld === 2) {
+                    Materials.findFirst('dirt')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                } else if (currentWorld === 3) {
+                    Materials.findFirst('chevron_yellow')
+                        .then(mat => {
+                            mesh.material = mat
+                        })
+                }
+            }}))
 
     animateTileSwap(selection, tileUi)
 }
@@ -532,7 +598,7 @@ function moveAgent(agent, agentPosition) {
                     tileSubscriptions.map(subscription => subscription.unsubscribe())
 
                     // Show world completed display
-                    Materials.findFirst(`${currentWorld === 1 ? 'grass' : 'snow'}_complete`).then(mat => mat.opacity = 1)
+                    Materials.findFirst(`${currentWorld === 1 ? 'grass' : currentWorld === 2 ? 'snow' : 'desert'}_complete`).then(mat => mat.opacity = 1)
 
                     // TODO: Game end animation
                     Scene.root.findFirst("mover")
@@ -781,30 +847,55 @@ function unanimateAllVisitedTiles() {
                                 mesh.material = mat
                             })
                     }
+                    else if (currentWorld === 3) {
+                        for (let i = 1; i <= 5; i++) {
+                            unanimateLevelVisitedTiles(i)
+                        }
+                    }
                 }))
         })
 }
 
-function unanimateLevelVisitedTiles() {
+function unanimateLevelVisitedTiles(level = currentLevel) {
     Scene.root.findFirst(`world${currentWorld}`)
         .then(world => {
-            world.findFirst(`level${currentLevel}`)
-                .then(level => {
-                    level.findAll("Box001__0")
-                        .then(meshes => meshes.forEach(mesh => {
-                            if (currentWorld === 1) {
-                                Materials.findFirst('chevron_yellow')
-                                    .then(mat => {
-                                        mesh.material = mat
-                                    })
-                            } 
-                            else if (currentWorld === 2) {
-                                Materials.findFirst('dirt')
-                                    .then(mat => {
-                                        mesh.material = mat
-                                    })
-                            }
-                        }))
+            world.findFirst(`level${level}`)
+                .then(levelObj => {
+                    levelObj.findAll("Box001__0")
+                        .then(meshes => {
+                            meshes.forEach(mesh => {
+                                if (currentWorld === 1) {
+                                    Materials.findFirst('chevron_yellow')
+                                        .then(mat => {
+                                            mesh.material = mat
+                                        })
+                                } 
+                                else if (currentWorld === 2) {
+                                    Materials.findFirst('dirt')
+                                        .then(mat => {
+                                            mesh.material = mat
+                                        })
+                                } else if (currentWorld === 3) {
+                                    Materials.findFirst('chevron_yellow')
+                                        .then(mat => {
+                                            mesh.material = mat
+                                        })
+                                }
+                            })
+
+                            // If reversed tile, restore red chevron
+                            LEVELS[`world${currentWorld}`][`level${level}`].flippedTiles.forEach(tileNo => {
+                                levelObj.findFirst(`tile${tileNo}`)
+                                    .then(tileUi => tileUi.findAll("Box001__0")
+                                        .then(meshes => meshes.forEach(mesh => {
+                                            Materials.findFirst('chevron_red')
+                                                .then(mat => {
+                                                    mesh.material = mat
+                                                })
+                                        }))
+                                    )
+                            })
+                        })
                 })
         })
 }
@@ -854,7 +945,7 @@ function animateLevelTransition(agent) {
                     animateMoveAgentAndPlatform(mover, agent, [13,5], 'down', [15,6], [15,7], 'down')
                     break
                 case 3:
-                    if (currentWorld === 1)
+                    if (currentWorld === 1 || currentWorld === 3)
                         animateMoveAgentAndPlatform(mover, agent, [16,11], 'left', [15,13], [15,14], 'down')
                     else if (currentWorld === 2)
                         animateMoveAgentAndPlatform(mover, agent, [17,12], 'left', [15,13], [15,14], 'down')
