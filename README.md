@@ -1,57 +1,106 @@
-# Saucy Pirates, a Pirate-themed AR Puzzle Game
+# PirateDash360: An augmented reality pirate themed puzzle game based on principles of logical thinking and problem solving skills.
 *by Team CharizARds for Facebook Spark AR Hackathon*
 
 <p align="center"><img src="img/SaucyPirates_thumbnail.png" width="600"/></p>
 
 ## Getting Started
+
+### Instagram
+
 Try out our game here (You will need to log onto your Instagram account):  
 https://www.instagram.com/ar/3521555794541192/?ch=YTI2MDBkODQ5YzY2NjZlNDQ3OWM0MDNkODg3ZTQ3NjM%3D
 
+### Spark AR Studio
+
+1. Open latest project in `/MVP3/MVP3.arproj`.
+2. Commence game either through emulator, or connect via phone
 ---
+
 ## Inspiration
-Before we started on computer games, we played physical puzzle games like Rush Hour and Circuit Maze when we were young. They were brain stimulating games that helped to strengthen our logical thinking, planning and problem solving skills. At the same time, in this COVID-19 period of staying home, parents are finding it hard to keep their children occupied. Therefore, we hope to recreate this puzzle experience for our future generation with an Augmented Reality (AR) platform game that we have conceived through several rounds of ideation, which we hope will occupy their time not just during this stay-home period, but beyond as well.
+
+As recent unversity graduates, each of us are soon to embark on our career journey. Inevitably, looking back and reflecting has been part of preparation for the journey ahead. We thought of instances that has propelled us into the world of technology, some highlights include physical puzzle games like Rush Hour, Circuit Maze and Carcasonne. These brain stimulating games has indeed formed the foundations behind our technology backgrounds, as they served to strengthen our **logical thinking aptitude, planning, memory and problem solving skills**.
+
+As a team, we wanted to **pay it forward and contribute to society**, especially in the **education space**. We wanted to do so through a fun and fuss free medium, after all learning is most productive when it is fun! While doing so, we intended to incoporate elements of **cutting edge technology** in today's society. Furthermore, during this period, where many of us are encountering various forms of lockdown in our respective countries due to COVID-19, we come to understand that certain parents are finding it difficult to keep their children occupied, we wanted to implement a solution which helps to solve this problem productively. Through these, **PirateDash360** was born.
+
+**PirateDash360** recreate this 360 degrees, immersive puzzle experience for our future generation through an Augmented Reality (AR) game that we have conceived through several rounds of ideation. We hope that through **PirateDash360**, users can strengthen their logical thinking aptitude, planning, memory, as well as problem solving skills in a fun manner. We also hope that that this game would serve as a productive form of entertainment and education for children during this trying period, and of course, beyond that as well.
 
 ---
 ## What it does
-Players are supposed to move the pirate from the start to the end, where the treasure chest is located. They have to swap the directional tiles in order to complete each puzzle. Through this game, we hope to strengthen the player's logical thinking, as there are multiple ways that the user can formulate the answer to the puzzle.
 
----
-## How we built it
-The game was built entirely using the Spark AR Studio. The main scripting done was JavaScript, and this set of code executes a set of commands based on the user’s swaps, and also allows them to toggle between different levels. Various game objects were sourced from different sites that provided game assets for free.
+**PirateDash360** is a 360 degrees augmented reality game which brings the player into the world of hunting treasure chests through solving puzzles. Players are tasked to formulate a path which leads the pirate from the starting tile to the end tile, where the treasure is located, while avoiding various traps and obstacles. This is done through swapping directional tiles. Through this game, we hope to strengthen the player's logical thinking, as there are multiple ways that the user can formulate the answer to the puzzle.
 
-We have created a few levels for our players, and they come in a 3 x 3 and a 4 x 4 grid. Players are required to swap the tiles to complete the game successfully. Currently, these are the levels and puzzle types available:  
+Currently, **PirateDash360** guides our player with our very own true treasure hunting journey,and comprise two worlds with five levels in each world, featuring different themes (GrassLand and Snow World), settings, traps, obstacles, tile variations and many more!
+
+Themes and levels available:
 <p align="center"><img src="img/Level1.PNG" width="150"/></p>
 
 ---
-## Challenges we ran into
-As we were new to the realms of augmented reality, we had to learn Spark AR from scratch. Fortunately, the tutorials were informative and provided us with what we needed to complete our game. 
-
-We also faced issues with sourcing and coming up with the assets as we are not trained in the field of graphic design. Nonetheless, we were able to find the assets that suited this game.
+## How we built it
+The backbone of **PirateDash360** was built with Spark AR Studio. We experimented with both the patch editor as well as scripting, and utilises element in both, with most of the elements done via scripting. We also made use of Spark AR's native picker and particle systems, amongst other Spark AR Studio's features utilised. Assets such as 3D objects, images and sounds were carefully curated through multiple sources to project a unified and natural experience.
 
 ---
+## Challenges we ran into
+As most of us were new to the realms of augmented reality, as well as game programming, we had to learn Spark AR from scratch. Fortunately, the tutorials were informative and provided us with what we needed to complete our game. Some of our main challenges include the following:
+
+- Sourcing and curation of assets that were within our stipulated budget, whilst maintaining required size requirement for deployment of **PirateDash360** on Instagram.
+
+- Our lack of knowledge on 3D modelling and animation concepts such as blending, cull and animation curves made it difficult for us to configure the aesthetics of our game in the earlier weeks. Despite multiple attempts, we were not able to do due to time constraint and bandwidth limitations. We decided to utilise the wealth of resources available from third parties such as SketchFab.
+
+- While we used scripting to create most of our animations, we were not able to change the animation controller attached to our 3D objects without the Patch Editor. We managed to integrate the script and Patch Editor via passing of variables, but the Option Picker was limited to only 5 options, and hence, we could not fully utilise the range of animations of our objects.
+
+- We had multiple ambitious ideas around the usage of AR during our planning stage, but many proved infeasible due to the size limit. However, this is fully understandable and we are glad to have overcame this challenge toward the end.
+
+- Some of us concurred on the initial learning curve of the patch editor for animation tweaks, this was resolved over time through practice, and we realised the immense equity that it provides for developers.
+
+- We had issues with positioning and piecing together assets in the World View, as we were pretty new to AR technology, this got better over time, through practice and playing around with the different toolings available in Spark AR Studio.
+  
+---
 ## Accomplishments that we’re proud of
-We were very satisfied with the end result, as we were total AR novices at the very beginning. We came up with a lot of ideas, including an interactive ocean, and eventually settled for this puzzle game after considering the various limitations that we encountered.
+Overall, We are very satisfied with our end result, and only wished we had more time to implement more features for our users. That being said, we are are really proud of what we have done as a team. Through **PirateDash360**, we believe we can deliver on our intentions and goals as highlighted above! More details on our accomplishments and plans can be found in the next section.
 
 ---
 ## What we learned
-We learnt so much regarding Spark AR Studio and how scripting can be used to enhance the AR experience. From coming up with ideas and designing the gameplay, we have learnt that that there are endless possibilities that AR can be used to enhance an experience. Although we were only doing it for a mobile device, it 
+We learnt so much regarding Spark AR Studio and how scripting can be used to enhance the overall AR experience. Through our various brainstorming and ideation sessions, we learnt that that there are endless possibilities when it comes to AR, and can be leveraged in many settings including, but not limited to education and gaming. Some key learning points include:
 
+- Learnt about how animations work and how they can be created in Spark AR with the Patch Editor.
+
+- Learnt how to create Spark AR projects and script using Javascript with reactive programming.
+
+- Learnt about UI/UX, theming and AB Testing, through this, we were able to piece together various curated UI assets, which helped us in conceptualising and theming of the game, thus, providing a natural and intuitive experience for our gamers.
+
+- Learnt about the benefits of Augmented Reality and Education based Gaming, and how we could potentially bring across social good and value to the masses through cutting edge technology.
+  
 ---
-## What's next for Saucy Pirates
-Next, we plan to add in more tile types, such as distractors, and allow for different difficulty levels in the different grids.
+## What's next for PirateDash360
+We have great plans for **PirateDash360**! We intend to add more world themes and levels, include new obstacles and more complexities into the game. We also want to make the game even more fun through our own novelty effects, such as the snow particle systems and animated clouds, essentially effects that can be built through Spark AR Studio. Beyond this, we also plan to introduce memory based elemented into the the game, such as an eight directional tile system as compared to our current four directional tile system. We also intend to introduce concealed tiles, introducing more memory intensive reuirements in the game. Look forward to our updates!
 
 ---
 ## Acknowledgements/Resources/References
-SketchFab  
-Kenney  
-Javascript  
-Spark-AR  
 
-### Links
-https://www.kenney.nl/assets/platformer-kit  
+- SketchFab  
+- Quaternius.Itch.IO
+- Kenney
+- Facebook Sound Design
+- Global Genius
+- Javascript  
+- Spark AR Studio
+
+### Image Assets
+https://www.kenney.nl/assets/platformer-kit
+https://www.kenney.nl/assets/pirate-kit
 https://sketchfab.com/3d-models/3d-sidescroller-little-pirate-7329a3297b374a8ca0bbb032eb49a3aa  
-https://sketchfab.com/3d-models/treasure-chest-b46fd9edd44e412fa76f9b9a2b86281c  
-https://sketchfab.com/3d-models/chevron-f4a277b8d9cd47e0bea272eb58c1c5b0  
+https://sketchfab.com/3d-models/treasure-chest-b46fd9edd44e412fa76f9b9a2b86281c 
+https://sketchfab.com/3d-models/chevron-f4a277b8d9cd47e0bea272eb58c1c5b0
+https://sketchfab.com/3d-models/bomberman-bomb-4a109903cbd34bef9d48e427a2d4da78
+https://sketchfab.com/3d-models/bomberman-fire-8e482145eeed419980fabf073fcb13c9
+https://quaternius.itch.io/platformer-pack/
+
+### Sound Assets
+
+Found through Spark AR Studio, sound clips can be located in:
+`MVP3/sounds/*`
+
+Sources include: Facebook Sound Design and Global Genius
 
 ---
-*Updated as at 12 June 2020*
+*Updated as at 24 June 2020*
