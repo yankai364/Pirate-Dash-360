@@ -1,9 +1,11 @@
-# Pirate Dash 360: A 360° Augmented Reality (AR) puzzle game that hones logical thinking, memory and problem solving skills
+# Pirate Dash 360
+## Guide the pirate to the treasure! A 360° AR puzzle platformer game that hones logical thinking, memory and problem solving skills. Choose from 3 worlds of varying themes, obstacles and challenges!
+
 <p align="center"><img src="img/PirateDash360_thumbnail.png" width="70%"/></p>
 
-<p align="center"><i>A Facebook Spark AR Hackathon Submission</i></center>
+<p align="center"><i>Submission for Facebook Hackathon: AR</i></center>
 <p align="center">
-Team Members: <a href="https://github.com/gabrielkzm">Gabriel Koh</a>, <a href="https://github.com/ngrq123">Ng Rui Qin</a>, <a href="https://github.com/yankai364">Ong Yan Kai</a>, <a href="https://github.com/vncnttkkk">Vincent Tok</a>
+Team Members: <a href="https://github.com/gabrielkzm">Gabriel Koh</a>, <a href="https://github.com/ngrq123">Rui Qin Ng</a>, <a href="https://github.com/yankai364">Yan Kai Ong</a>, <a href="https://github.com/vncnttkkk">Vincent Tok</a>
 </p>
 
 ## Getting Started
@@ -34,7 +36,7 @@ As a team, we wanted to **pay it forward and contribute to society**, especially
 
 Currently, **Pirate Dash 360** offers a selection of 3 different worlds (Grass, Snow and Desert) of varying difficulty, each comprising 5 separate levels. Each level features traps, obstacles, tile variations and many more!
 
-<img src="img/GrassLevel1.PNG" width="25%" alt="test"/><img src="img/SnowLevel1.PNG" width="25%"/><img src="img/DesertLevel1.PNG" width="25%"/><img src="img/SnowWorld.PNG" width="25%"/>
+<img src="img/GrassLevel1.PNG" width="25%"/><img src="img/SnowLevel1.PNG" width="25%"/><img src="img/DesertLevel1.PNG" width="25%"/><img src="img/SnowWorld.PNG" width="25%"/>
 *From left to right: Grass World Level 1, Snow World Level 1, Desert World Level 1, Snow World top view*
 
 ## How we built it
