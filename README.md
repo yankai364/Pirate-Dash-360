@@ -1,19 +1,24 @@
-# Pirate Dash 360: A 360° Augmented Reality (AR) puzzle game that challenges logical thinking, memory and problem solving skills.
-*A Facebook Spark AR Hackathon Submission*
+# Pirate Dash 360: A 360° Augmented Reality (AR) puzzle game that hones logical thinking, memory and problem solving skills
+<p align="center"><img src="img/PirateDash360_thumbnail.png" width="70%"/></p>
 
-<p align="center"><img src="img/PirateDash360_thumbnail.png" width="600"/></p>
+*A Facebook Spark AR Hackathon Submission*
+<p>
+Team Members: <a href="https://github.com/gabrielkzm">Gabriel Koh</a>, <a href="https://github.com/ngrq123">Ng Rui Qin</a>, <a href="https://github.com/yankai364">Ong Yan Kai</a>, <a href="https://github.com/vncnttkkk">Vincent Tok</a>
+</p>
 
 ## Getting Started
 
 ### Instagram
-
-Try out our game here (You will need to log onto your Instagram account):  
-https://www.instagram.com/ar/3521555794541192/?ch=YTI2MDBkODQ5YzY2NjZlNDQ3OWM0MDNkODg3ZTQ3NjM%3D
+*To be updated after publishing effect*
 
 ### Spark AR Studio
 
-1. Open latest project in `/MVP3/MVP3.arproj`.
-2. Commence game either through emulator, or connect via phone
+#### 1. Clone repository
+~~~
+git clone git@github.com:yankai364/Pirate-Dash-360.git
+~~~
+#### 2. Open the project file in Spark AR Studio
+#### 3. Commence game either through emulator, or connect via phone
 ---
 
 ## Inspiration
@@ -22,9 +27,6 @@ As recent university graduates, each of us are about to step into the working wo
 
 As a team, we wanted to **pay it forward and contribute to society**, especially in the **education space**. We wanted to do so through a fun and fuss-free medium. After all,  learning is most productive when it is fun! To maximise the fun, we wanted to incorporate elements of **cutting edge technology** in today's society for a stronger user engagement and experience. During this difficult period, as people around the world are staying home and observing social distancing measures due to COVID-19, we have come to realise that some parents are finding it difficult to keep their children occupied productively. To tackle this, we decided to design a solution to keep youths engaged while developing their logical reasoning and problem solving skills. After several rounds of ideation, **Pirate Dash 360** was born.
 
-<!--
-**Pirate Dash 360** creates a 360°, immersive puzzle experience through an Augmented Reality (AR) game that we have conceived over several rounds of ideation. We hope that through **Pirate Dash 360**, users can strengthen their logical thinking aptitude, planning, memory, as well as problem solving skills in a fun manner. We also hope that that this game would serve as a productive form of entertainment and education for children during this trying period, and of course, beyond that as well.
--->
 
 ## What it does
 
@@ -33,7 +35,7 @@ As a team, we wanted to **pay it forward and contribute to society**, especially
 Currently, **Pirate Dash 360** offers a selection of 3 different worlds (Grass, Snow and Desert) of varying difficulty, each comprising 5 separate levels. Each level features traps, obstacles, tile variations and many more!
 
 Themes and levels available:
-<p align="center"><img src="img/Level1.PNG" width="150"/></p>
+
 
 
 ## How we built it
@@ -89,7 +91,7 @@ We have great plans for **Pirate Dash 360**! We intend to add more world themes 
 - Javascript  
 - Spark AR Studio  
 
-### Image Assets
+### 3D Assets
 https://www.kenney.nl/assets/platformer-kit  
 https://www.kenney.nl/assets/pirate-kit  
 https://sketchfab.com/3d-models/3d-sidescroller-little-pirate-7329a3297b374a8ca0bbb032eb49a3aa    
@@ -99,12 +101,13 @@ https://sketchfab.com/3d-models/bomberman-bomb-4a109903cbd34bef9d48e427a2d4da78
 https://sketchfab.com/3d-models/bomberman-fire-8e482145eeed419980fabf073fcb13c9  
 https://quaternius.itch.io/platformer-pack/  
 
-### Sound Assets
+### Audio Assets
 
-Found through Spark AR Studio, sound clips are located in:
-`MVP3/sounds/*`
+Imported within Spark AR Studio.
 
-Sources include: Facebook Sound Design and Global Genius
+Sources: 
+Facebook Sound Design
+Global Genius
 
 ---
 *Updated as at 24 June 2020*
