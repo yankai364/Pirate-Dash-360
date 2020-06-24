@@ -427,10 +427,17 @@ function swapTiles(position1, position2, selection, tileUi) {
                             mesh.material = mat
                         })
                 } else if (currentWorld === 3) {
-                    Materials.findFirst('chevron_yellow')
-                        .then(mat => {
-                            mesh.material = mat
-                        })
+                    if (level.flippedTiles && level.flippedTiles.includes(parseInt(tileUi.name.match(/\d/g).join('')))) {
+                        Materials.findFirst('chevron_red')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    } else {
+                        Materials.findFirst('chevron_yellow')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    }
                 }
             }}))
 
@@ -452,10 +459,17 @@ function swapTiles(position1, position2, selection, tileUi) {
                             mesh.material = mat
                         })
                 } else if (currentWorld === 3) {
-                    Materials.findFirst('chevron_yellow')
-                        .then(mat => {
-                            mesh.material = mat
-                        })
+                    if (level.flippedTiles && level.flippedTiles.includes(parseInt(selection.name.match(/\d/g).join('')))) {
+                        Materials.findFirst('chevron_red')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    } else {
+                        Materials.findFirst('chevron_yellow')
+                            .then(mat => {
+                                mesh.material = mat
+                            })
+                    }
                 }
             }}))
 
@@ -945,9 +959,9 @@ function animateLevelTransition(agent) {
                     animateMoveAgentAndPlatform(mover, agent, [13,5], 'down', [15,6], [15,7], 'down')
                     break
                 case 3:
-                    if (currentWorld === 1 || currentWorld === 3)
+                    if (currentWorld === 1)
                         animateMoveAgentAndPlatform(mover, agent, [16,11], 'left', [15,13], [15,14], 'down')
-                    else if (currentWorld === 2)
+                    else if (currentWorld === 2 || currentWorld === 3)
                         animateMoveAgentAndPlatform(mover, agent, [17,12], 'left', [15,13], [15,14], 'down')
                     break
                 case 4:
