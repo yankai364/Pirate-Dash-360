@@ -845,29 +845,30 @@ function animateTileVisited(tile) {
 }
 
 function unanimateAllVisitedTiles() {
-    Scene.root.findFirst(`world${currentWorld}`)
-        .then(world => {
-            world.findAll("Box001__0")
-                .then(meshes => meshes.forEach(mesh => {
-                    if (currentWorld === 1) {
-                        Materials.findFirst('chevron_yellow')
-                            .then(mat => {
-                                mesh.material = mat
-                            })
-                    } 
-                    else if (currentWorld === 2) {
-                        Materials.findFirst('dirt')
-                            .then(mat => {
-                                mesh.material = mat
-                            })
-                    }
-                    else if (currentWorld === 3) {
-                        for (let i = 1; i <= 5; i++) {
-                            unanimateLevelVisitedTiles(i)
+    if (currentWorld === 3) {
+        for (let i = 1; i <= 5; i++) {
+            unanimateLevelVisitedTiles(i)
+        }
+    } else {
+        Scene.root.findFirst(`world${currentWorld}`)
+            .then(world => {
+                world.findAll("Box001__0")
+                    .then(meshes => meshes.forEach(mesh => {
+                        if (currentWorld === 1) {
+                            Materials.findFirst('chevron_yellow')
+                                .then(mat => {
+                                    mesh.material = mat
+                                })
+                        } 
+                        else if (currentWorld === 2) {
+                            Materials.findFirst('dirt')
+                                .then(mat => {
+                                    mesh.material = mat
+                                })
                         }
-                    }
-                }))
+                    }))
         })
+    }
 }
 
 function unanimateLevelVisitedTiles(level = currentLevel) {
