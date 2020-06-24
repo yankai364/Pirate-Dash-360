@@ -1,5 +1,5 @@
-# Pirate Dash 360: An augmented reality pirate themed puzzle game based on principles of logical thinking and problem solving skills.
-*Completed for Facebook Spark AR Hackathon*
+# Pirate Dash 360: A 360° Augmented Reality puzzle game that hones logical, memory & problem-solving skills
+*Completed for Facebook Hackathon: AR*
 
 <p align="center"><img src="img/PirateDash360_thumbnail.png" width="600"/></p>
 
