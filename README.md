@@ -1,8 +1,8 @@
 # Pirate Dash 360: A 360° Augmented Reality (AR) puzzle game that hones logical thinking, memory and problem solving skills
 <p align="center"><img src="img/PirateDash360_thumbnail.png" width="70%"/></p>
 
-*A Facebook Spark AR Hackathon Submission*
-<p>
+<p align="center"><i>A Facebook Spark AR Hackathon Submission</i></center>
+<p align="center">
 Team Members: <a href="https://github.com/gabrielkzm">Gabriel Koh</a>, <a href="https://github.com/ngrq123">Ng Rui Qin</a>, <a href="https://github.com/yankai364">Ong Yan Kai</a>, <a href="https://github.com/vncnttkkk">Vincent Tok</a>
 </p>
 
@@ -34,9 +34,8 @@ As a team, we wanted to **pay it forward and contribute to society**, especially
 
 Currently, **Pirate Dash 360** offers a selection of 3 different worlds (Grass, Snow and Desert) of varying difficulty, each comprising 5 separate levels. Each level features traps, obstacles, tile variations and many more!
 
-Themes and levels available:
-
-
+<img src="img/GrassLevel1.PNG" width="25%" alt="test"/><img src="img/SnowLevel1.PNG" width="25%"/><img src="img/DesertLevel1.PNG" width="25%"/><img src="img/SnowWorld.PNG" width="25%"/>
+*From left to right: Grass World Level 1, Snow World Level 1, Desert World Level 1, Snow World top view*
 
 ## How we built it
 Each world was designed with a theme and different set of challenges in mind. To project a fun and unified experience, we carefully curated a range of assets such as 3D objects, images and sounds from multiple sources. We then positioned and scaled the assets in Spark AR Studio. We also made use of Spark AR's native picker as a user interface, as well as particle systems to enhance the environment.
@@ -81,15 +80,14 @@ We have great plans for **Pirate Dash 360**! We intend to add more world themes 
 
 
 ---
-## Acknowledgements/Resources/References
+## Acknowledgements
 
-- SketchFab  
-- Quaternius.Itch.IO  
-- Kenney  
-- Facebook Sound Design  
-- Global Genius  
-- Javascript  
-- Spark AR Studio  
+- SketchFab
+- Quaternius.Itch.IO
+- Kenney
+- Facebook Sound Design
+- Global Genius
+- Spark AR Studio
 
 ### 3D Assets
 https://www.kenney.nl/assets/platformer-kit  
@@ -103,11 +101,11 @@ https://quaternius.itch.io/platformer-pack/
 
 ### Audio Assets
 
-Imported within Spark AR Studio.
+Imported from within Spark AR Studio.
 
 Sources: 
-Facebook Sound Design
-Global Genius
+- Facebook Sound Design
+- Global Genius
 
 ---
 *Updated as at 24 June 2020*
