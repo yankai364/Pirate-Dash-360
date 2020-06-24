@@ -19,7 +19,7 @@ git clone git@github.com:yankai364/Pirate-Dash-360.git
 ~~~
 #### 2. Open the project file in Spark AR Studio
 #### 3. Commence game either through emulator, or connect via phone
----
+
 
 ## Inspiration
 
@@ -79,7 +79,7 @@ We learnt so much regarding Spark AR Studio and how scripting can be used to enh
 We have great plans for **Pirate Dash 360**! We intend to add more world themes and levels, include new obstacles and more complexities into the game. Beyond this, we also plan to introduce elements that will further challenge short-term memory capacity as well as visual and spatial reasoning. Examples include jigsaw puzzles, rotating tiles and an eight directional tile system as compared to our current four directional tile system. Look forward to our updates!
 
 
----
+
 ## Acknowledgements
 
 - SketchFab
