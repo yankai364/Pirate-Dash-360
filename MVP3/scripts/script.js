@@ -226,20 +226,22 @@ function initLevel() {
             
             // Listen for tap on character
             pirateSubscription = TouchGestures.onTap(agent).subscribe(function (gesture) {
-                if (!ready) {
-                    Diagnostics.log("Starting game");
-                    ready = true;
+                timeouts['concurrentTapBuffer'] = Time.setTimeout(() => {
+                    if (!ready && !tileIsAnimating) {
+                        ready = true;
+                        Diagnostics.log("Starting game");
 
-                    // Unselect any selected tiles
-                    selection ? animateTileSelect(selection, "blur") : ''
+                        // Unselect any selected tiles
+                        selection ? animateTileSelect(selection, "blur") : ''
 
-                    // Move agent
-                    moveAgentIntervalID = Time.setInterval(() => {
-                        if (!playerLost && (agentPosition[0] !== endTile.position[0] || agentPosition[1] !== endTile.position[1])) {
-                            agentPosition = moveAgent(agent, agentPosition);
-                        }
-                    }, 1000);
-                }
+                        // Move agent
+                        moveAgentIntervalID = Time.setInterval(() => {
+                            if (!playerLost && (agentPosition[0] !== endTile.position[0] || agentPosition[1] !== endTile.position[1])) {
+                                agentPosition = moveAgent(agent, agentPosition);
+                            }
+                        }, 1000);
+                    }
+                }, 100)
             });
 
             Diagnostics.log("Agent loaded");
@@ -267,9 +269,10 @@ function initLevel() {
         
                             // For each tile, prepare listener for tap event
                             let tileSubscription = TouchGestures.onTap(tileUi).subscribe(function () {
-                                timeouts['concurrentTapBuffer'] = Time.setTimeout(() => {
+                                timeouts['concurrentTapBuffer2'] = Time.setTimeout(() => {
                                     if (!ready) {
                                         if (!tileIsAnimating) {
+                                            tileIsAnimating = true
                                             if (selection === null) {
                                                 // if there is no active tile
                                                 selection = tileUi
@@ -362,6 +365,7 @@ function placeTile(tilePattern, position) {
             world.findFirst(`level${currentLevel}`)
                 .then(level => level.findFirst(tilePattern.name)
                     .then(tileUi => {
+                        // Set tile position
                         tileUi.transform.x = getCoordinateXFromIndex(position[0]);
                         tileUi.transform.y = 2;
                         tileUi.transform.z = getCoordinateZFromIndex(position[1]);
@@ -611,14 +615,13 @@ function animateTileSelect(tile, animation) {
     const tdTileMove = getTimeDriver();
 
     let yValue = tile.transform.y.pinLastValue();
-    yValue = animation === "active" ? yValue + 0.02 : yValue - 0.02;
+    yValue = animation === "active" ? yValue + 0.02 : TOP_LEFT_Y;
 
     tile.transform.y = Animation.animate(
         tdTileMove,
         Animation.samplers.linear(tile.transform.y.pinLastValue(), yValue)
     );
-
-    tileIsAnimating = true
+    
     tdTileMove.start();
     tdTileMove.onCompleted().subscribe(function() {
         tileIsAnimating = false
